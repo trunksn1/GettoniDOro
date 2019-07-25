@@ -12,6 +12,7 @@ def main():
             immagine_domanda, immagine_risposta = screen_grab(coordinate_domande_e_risposte)
             testo_domanda = ocr_core(immagine_domanda)
             testo_risposta = ocr_core(immagine_risposta)
+            testo_risposta = testo_risposta.split("\n")
             ricerca(testo_domanda, testo_risposta)
         else:
             immagine = screen_grab(coordinate_domande_e_risposte)
