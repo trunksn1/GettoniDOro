@@ -14,4 +14,4 @@ def splitanswers(img):
       while flip !=1 :
         positions.append(len(img[:,1135])-i)
         flip = 1 
-  return positions[0:7]
+  return positions[0:6]
