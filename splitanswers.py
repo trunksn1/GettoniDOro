@@ -3,15 +3,28 @@ import cv2
 import numpy as np
 
 def splitanswers(img):
-  flip = 1 
+
   positions = []
-  for i in range(len(img[:,1135])):
-    if img[-1-i,1335] > 220:
+  threshold = 150
+  flip      = 1
+  
+  #Average image along x to avoid false
+  #flip due to letters
+  averaged_im = np.mean(img,1)
+  num_pixel   = len(averaged_im)
+  
+  for i in range(num_pixel):
+    #Control is made bottom up to avoid question
+    if averaged_im[-1-i] > threshold:
       while flip !=0 :
-        positions.append(len(img[:,1135])-i)
+        positions.append(num_pixel-i)
         flip = 0
     else: 
       while flip !=1 :
-        positions.append(len(img[:,1135])-i)
-        flip = 1 
+        positions.append(num_pixel-i)
+        flip = 1
+
+  #First six positions correspond to y pixels
+  #of beggining and end of answers box
+  #orders is bottom up
   return positions[0:6]
