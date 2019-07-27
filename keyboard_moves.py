@@ -8,6 +8,7 @@ cords = []
 def on_press(key):
     global cords
     print('{0} pressed'.format(key))
+    
     if key == Key.f4:
         """Cliccando col mouse inizi a selezionare lo schermo, rilasci per terminare"""
         cords = []
@@ -26,11 +27,11 @@ def on_press(key):
         ocr_test()
         return False
 
-
-
 def start_screen_grab():
     print('Adesso premi F4, F9 o F6 (quest\'ultimo è ancora in fase di test)')
+
     with Listener(on_press=on_press) as listener:
         listener.join()
+
     return cords
 

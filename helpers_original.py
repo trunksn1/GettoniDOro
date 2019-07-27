@@ -13,7 +13,6 @@ import numpy as np
 from urllib.parse import quote
 import subprocess
 from selenium import webdriver
-import splitanswers as spl
 
 driver = ''
 
@@ -23,8 +22,6 @@ def screen_grab(cords):
         os.makedirs(SCREEN_DIR)
     if not os.path.isdir(RELABOR_DIR):
         os.makedirs(RELABOR_DIR)
-    if not os.path.isdir(TEST_DIR):
-        os.makedirs(TEST_DIR)
     if type(cords) == tuple:
         #Se hai usato F4
         
@@ -43,36 +40,70 @@ def screen_grab(cords):
         else:
             screenshot_name = (SCREEN_DIR + '\\full_snap__' + str(int(time.time())) +
                 '.png')
+
         print(screenshot_name)
 
         #Salva lo screenshot
         im.save(screenshot_name, 'PNG')
-        img = perfeziona_immagine(screenshot_name)
+        return screenshot_name
+    else:
+        #Se hai usato F6
+        print(cords)
+        #PRIMA PARTE PER LE DOMANDE
+        #Seleziona le coordinate dello schermo
+        box_domande = cords[0]
+        im = ImageGrab.grab(box_domande)
+
         # Percorso e nome da dare agli screenshot
         if (os.name=='posix'):
             screenshot_name_d = (SCREEN_DIR + '/domanda__' + str(int(time.time())) +
-                         '.png')
+                             '.png')
         else:
             screenshot_name_d = (SCREEN_DIR + '\\domanda__' + str(int(time.time())) +
-                                 '.png')
+                           '.png')
         print(screenshot_name_d)
+
+        #new_size = (mult * x for x in im.size)
+        #im = im.resize(new_size, Image.ANTIALIAS)
+
+        #Salva lo screenshot
+        im.save(screenshot_name_d, 'PNG')
+
+        #Altera l'immagine per aiutare l'ocr a riconoscere il testo
+        img = perfeziona_immagine(screenshot_name_d)
 
         #Salva l'immagine rielaborata
         if (os.name=='posix'):
             nomefile_d = TEST_DIR + f'/domanda_{str(int(time.time()))}x.png'
         else:
             nomefile_d = TEST_DIR + f'\\domanda_{str(int(time.time()))}x.png'
-                
+
         cv2.imwrite(nomefile_d, img)
-        pos = spl.splitanswers(img)
-        print(pos)
-        answer1_img = img[pos[0]:pos[1],0:len(img[1,:])]
-        cv2.imshow("crop",answer1_img)
-        cv2.waitKey(0)
-        return screenshot_name
 
+        # SECONDA PARTE PER LE RISPSOTE
+        box_risposte = cords[1]
+        im = ImageGrab.grab(box_risposte)
+        if (os.name=='posix'):
+            screenshot_name_r = (SCREEN_DIR + '/risposta__' + str(int(time.time())) +
+                                 '.png')
+        else:
+            screenshot_name_r = (SCREEN_DIR + '\\risposta__' + str(int(time.time())) +
+                           '.png')
+        print(screenshot_name_r)
 
+        #new_size = (mult * x for x in im.size)
+        #im = im.resize(new_size, Image.ANTIALIAS)
 
+        im.save(screenshot_name_r, 'PNG')
+        img = img = perfeziona_immagine(screenshot_name_r)
+        if (os.name=='posix'):
+            nomefile_r = TEST_DIR + f'/risposta_{str(int(time.time()))}x.png'
+        else:
+            nomefile_r = TEST_DIR + f'\\risposta_{str(int(time.time()))}x.png'
+        cv2.imwrite(nomefile_r, img)
+
+        return nomefile_d, nomefile_r
+        #return screenshot_name_d, screenshot_name_r
 
 def perfeziona_immagine(filename):
     #Apre l'immagine con CV2

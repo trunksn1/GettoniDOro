@@ -1,5 +1,4 @@
 # -- coding: utf-8 --
-import cv2
 import numpy as np
 
 def splitanswers(img):
@@ -8,8 +7,8 @@ def splitanswers(img):
   threshold = 150
   flip      = 1
   
-  #Average image along x to avoid false
-  #flip due to letters
+  #Average image along x to avoid
+  #false flip due to letters
   averaged_im = np.mean(img,1)
   num_pixel   = len(averaged_im)
   
@@ -25,6 +24,6 @@ def splitanswers(img):
         flip = 1
 
   #First six positions correspond to y pixels
-  #of beggining and end of answers box
-  #orders is bottom up
+  #of beginning and end of answers box
+  #ordered bottom up
   return positions[0:6]

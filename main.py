@@ -13,11 +13,11 @@ def main():
             testo_domanda = ocr_core(immagine_domanda)
             testo_risposta = ocr_core(immagine_risposta)
             testo_risposta = testo_risposta.split("\n")
-            ricerca(testo_domanda, testo_risposta)
+            #ricerca(testo_domanda, testo_risposta)
         else:
             immagine = screen_grab(coordinate_domande_e_risposte)
             testo = ocr_core(immagine)
-            ricerca(testo)
+            #ricerca(testo)
 
 
 if __name__ == '__main__':
