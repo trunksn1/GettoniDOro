@@ -16,4 +16,4 @@ y_finale_domande = 140
 
 #Dimensione dello screen grab x Risposte
 y_iniziale_risposte = 165
-y_finale_risposte = 290
+y_finale_risposte = 320

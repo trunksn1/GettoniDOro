@@ -12,6 +12,7 @@ from pynput import mouse
 from pynput.keyboard import Key, Listener
 from selenium import webdriver
 from cf import x_finale, y_finale_risposte, y_iniziale_risposte, y_finale_domande, SCREEN_DIR, RELABOR_DIR, TEST_DIR
+from splitanswers import splitanswers
 
 class ScreenGrab():
     """Oggetto deputato alla cattura dello schermo"""
@@ -23,6 +24,8 @@ class ScreenGrab():
         if not os.path.isdir(RELABOR_DIR):
             os.makedirs(RELABOR_DIR)
         self.start_screen_grab()
+        self.screen_grab()
+        self.get_all_cords()
 
     def start_screen_grab(self):
         print('Adesso premi F4, F9 o F6 (quest\'ultimo è ancora in fase di test)')
@@ -41,7 +44,7 @@ class ScreenGrab():
         if key == Key.f6:
             self.cords = []
             self.key_pressed = 'F6'
-            self.cords = self.get_cords_new()
+            self.get_cords_new()
             return False
         if key == Key.f9:
             """Riprende le coordinate dell'ultima schermata catturata"""
@@ -61,10 +64,8 @@ class ScreenGrab():
         with mouse.Listener(on_click=self.on_click) as listener:
             listener.join()
 
-            cord_domande_risposte_totali = self.calcolo_spazi_domande_e_risposte()
-            print(cord_domande_risposte_totali)
-            self.cords = cord_domande_risposte_totali
-            #return cord_domande_risposte_totali
+            self.calcolo_spazi_domande_e_risposte()
+
 
     def on_click(self, x, y, button, pressed):
         """Funzione che prende le coordinate del puntatore del mouse prima quando clicchi e poi quando rilasci"""
@@ -85,6 +86,7 @@ class ScreenGrab():
         # 2 coordinate domanda + risposte
 
         inizio_domande = list(self.cords[0])
+        """
         fine_domande = [self.cords[0][0] + x_finale, self.cords[0][1] + y_finale_domande]
         coordinate_domande = inizio_domande + fine_domande
 
@@ -92,91 +94,46 @@ class ScreenGrab():
         fine_risposte = [fine_domande[0], inizio_risposte[1] + y_finale_risposte]
         coordinate_risposte = inizio_risposte + fine_risposte
 
-        coordinate_totali = [coordinate_domande, coordinate_risposte, inizio_domande + fine_risposte]
+        self.cords = [coordinate_domande, coordinate_risposte, inizio_domande + fine_risposte]
+        """
+        fine_risposte = [self.cords[0][0] + x_finale, self.cords[0][1] + y_finale_domande + y_finale_risposte]
+        self.cords = inizio_domande + fine_risposte
 
-        print("coord_d = ", coordinate_domande)
-        print("coord_r = ", coordinate_risposte)
-        print("coord_totali = ", coordinate_totali)
-        return coordinate_totali
-        #return coordinate_domande, coordinate_risposte
 
-    def screen_grab(self, cords):
+        #print("coord_d = ", coordinate_domande)
+        #print("coord_r = ", coordinate_risposte)
+        print("coord_totali = ", self.cords)
+
+
+    def screen_grab(self, cords=[], nome=''):
         # TODO Dovrebbe funzionare sempre!!!
 
-        # Voglio che salvi sempre l'immagine con la domanda completa!
-        # Sia usando F4 che F6.
-        # se uso F4 perà voglio fare l'analisi dello screen senza che subisca modifiche
-        box = (self.cords[2])
-        screenshot_name = (SCREEN_DIR + '\\full_snap__' + str(int(time.time())) +
-                           '.png')<
-        self.screen_shot(box, screenshot_name)
+        if not cords:
+            box = (self.cords)# cords[0][2] è la lista che contiene le coordinate dello schermo con domande + risposte
+        else:
+            box = cords
+        if not nome:
+            nome = '\\totale__'
 
-        if self.key_pressed == 'F4':  
-            # Se hai usato F4
+        self.screenshot_name = (SCREEN_DIR + nome + str(int(time.time())) + '.png')
+        self.im = ImageGrab.grab(box)
+        self.im.save(self.screenshot_name, 'PNG')
+        print(type(self.im))
+        print(self.im)
 
-            # Seleziona le coordinate dello schermo
-            box = (self.cords[2])
-            screenshot_name = (SCREEN_DIR + '\\full_snap__' + str(int(time.time())) +
-                               '.png')
-            self.screen_shot(box, screenshot_name)
+        self.im = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
+        print(type(self.im))
+        print(self.im)
 
-            """
-            im = ImageGrab.grab(box)
 
-            # Percorso e nome da dare agli screenshot
-            screenshot_name = (SCREEN_DIR + '\\full_snap__' + str(int(time.time())) +
-                               '.png')
-            print(screenshot_name)
+    def get_all_cords(self):
+        print(type(self.im))
+        y_risposte = splitanswers(self.im)
+        print(y_risposte)
+        self.cord_r1    = [self.cords[0],y_risposte[5],self.cords[2],y_risposte[4]]
+        self.cord_r2    = [self.cords[0],y_risposte[3],self.cords[2],y_risposte[2]]
+        self.cord_r3    = [self.cords[0],y_risposte[1],self.cords[2],y_risposte[0]]
+        self.cord_d     = [self.cords[0],self.cords[1],self.cords[2],y_risposte[4]]
+        print(self.cord_d, self.cord_r1, self.cord_r2, self.cord_r3)
 
-            # Salva lo screenshot
-            im.save(screenshot_name, 'PNG')
-            return screenshot_name
-            """
-        elif self.key_pressed == 'F6':
-            # Se hai usato F6
-            print(cords)
-            # PRIMA PARTE PER LE DOMANDE
-            # Seleziona le coordinate dello schermo
-            box_domande = self.cords[0]
-            im = ImageGrab.grab(box_domande)
-
-            # Percorso e nome da dare agli screenshot
-            screenshot_name_d = (SCREEN_DIR + '\\domanda__' + str(int(time.time())) +
-                                 '.png')
-            print(screenshot_name_d)
-
-            # new_size = (mult * x for x in im.size)
-            # im = im.resize(new_size, Image.ANTIALIAS)
-
-            # Salva lo screenshot
-            im.save(screenshot_name_d, 'PNG')
-
-            # Altera l'immagine per aiutare l'ocr a riconoscere il testo
-            img = perfeziona_immagine(screenshot_name_d)
-
-            # Salva l'immagine rielaborata
-            nomefile_d = TEST_DIR + f'\\domanda_{str(int(time.time()))}x.png'
-            cv2.imwrite(nomefile_d, img)
-
-            # SECONDA PARTE PER LE RISPSOTE
-            box_risposte = self.cords[1]
-            im = ImageGrab.grab(box_risposte)
-            screenshot_name_r = (SCREEN_DIR + '\\risposta__' + str(int(time.time())) +
-                                 '.png')
-            print(screenshot_name_r)
-
-            # new_size = (mult * x for x in im.size)
-            # im = im.resize(new_size, Image.ANTIALIAS)
-
-            im.save(screenshot_name_r, 'PNG')
-            img = img = perfeziona_immagine(screenshot_name_r)
-
-            nomefile_r = TEST_DIR + f'\\risposta_{str(int(time.time()))}x.png'
-            cv2.imwrite(nomefile_r, img)
-
-            return nomefile_d, nomefile_r
-            # return screenshot_name_d, screenshot_name_r
-
-    def screen_shot(self, box, screenshot_name):
-        im = ImageGrab.grab(box)
-        im.save(screenshot_name, 'PNG')
+        self.cords = self.cord_d + self.cord_r1 + self.cord_r2 + self.cord_r3
