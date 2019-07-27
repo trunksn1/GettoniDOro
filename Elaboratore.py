@@ -1,7 +1,13 @@
-import os
+# -- coding: utf-8 --
+try:
+    from PIL import ImageGrab, Image
+except ImportError:
+    import Image
+import os, time
 import cv2
 import numpy as np
 from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR
+from splitanswers import splitanswers
 
 
 
@@ -9,27 +15,23 @@ class Elaboratore():
     """Oggetto che prende lo screenshot e lo rielabora ottenendo alla fine 4 diverse immagini in bianco e nero 1 è la domandale altre tre sono le singole risposte"""
     def __init__(self, screenshot_name, coords):
         self.screenshot_name = screenshot_name
-        self.coords = coords
+        self.cords = coords
         self.perfeziona_immagine()
         print('ELABORIAMO:')
         print(self.screenshot_name)
-
-    def avvio_elaborazione(self):
-        # Apre l'immagine con CV2
-        self.img = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
-
-        for n, coord in enumerate(self.coords):
-            if n == 0:
-                nome = 'Rielabor_domanda__'
-            else:
-                nome = 'Rielabor_risposta{}__'.format(n)
-            self.perfeziona_immagine(nome)
+        #print(self.img)
+        self.get_all_cords()
+        self.salva_i_pezzi()
 
 
-    def perfeziona_immagine(self, nome):
+    def perfeziona_immagine(self):
         """Va fatta dopo avere diviso le immagini di domande e risposte"""
         # Apre l'immagine con CV2
         self.img = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
+
+        height, width = self.img.shape[:2]
+        print("Pre misure: ")
+        print(height, width)
 
 
         # aumenta le dimensioni dell'immagine
@@ -56,12 +58,60 @@ class Elaboratore():
         print(self.screenshot_name)
         print(nome_f)
 
+
         cv2.imwrite(nome_f, self.img)
         """
         if 'risposta' in os.path.basename(filename):
             nome_risposta_invertita = RELABOR_DIR + f'\\Rielabor__Invertito' + os.path.basename(filename)
             img = cv2.bitwise_not(img)
             cv2.imwrite(nome_f, img)
-        """
+        
         return img
+        """
+
+
+    def get_all_cords(self):
+        y_risposte = splitanswers(self.img)
+        print('coordinate y_risposte: \n', y_risposte)
+        y, x = self.img.shape[:2]
+
+        """
+        self.cord_r1    = [self.cords[0],y_risposte[5],self.cords[2],y_risposte[4]]
+        self.cord_r2    = [self.cords[0],y_risposte[3],self.cords[2],y_risposte[2]]
+        self.cord_r3    = [self.cords[0],y_risposte[1],self.cords[2],y_risposte[0]]
+        self.cord_d     = [self.cords[0],self.cords[1],self.cords[2],y_risposte[4]]
+        """
+        self.cord_r1 = [0, y_risposte[5], x, y_risposte[4]]
+        self.cord_r2 = [0, y_risposte[3], x, y_risposte[2]]
+        self.cord_r3 = [0, y_risposte[1], x, y_risposte[0]]
+        self.cord_d = [0, 0, x, y_risposte[5]]
+
+        self.cords = [self.cord_d] + [self.cord_r1] + [self.cord_r2] + [self.cord_r3]
+
+
+    def salva_i_pezzi(self):
+        self.pezzi = []
+
+        print(self.cords)
+
+        for n, cord in enumerate(self.cords):
+            crop_img = self.img[cord[1]:cord[3], cord[0]:cord[2]].copy()
+            #[y:y + h, x:x + w].copy()
+
+            if n == 0:
+                screenshot_name = (SCREEN_DIR + '\\domanda__' + str(int(time.time())) +
+                                   '.png')
+            else:
+                screenshot_name = (SCREEN_DIR + '\\risposta_{}__'.format(n) + str(int(time.time())) +
+                                   '.png')
+            # Percorso e nome da dare agli screenshot
+
+            print(cord)
+            print(screenshot_name)
+            self.pezzi.append(screenshot_name)
+
+            # Salva lo screenshot
+            cv2.imwrite(screenshot_name, crop_img)
+
+
 

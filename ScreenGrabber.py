@@ -25,7 +25,7 @@ class ScreenGrab():
             os.makedirs(RELABOR_DIR)
         self.start_screen_grab()
         self.screen_grab()
-        self.get_all_cords()
+        #self.get_all_cords()
 
     def start_screen_grab(self):
         print('Adesso premi F4, F9 o F6 (quest\'ultimo è ancora in fase di test)')
@@ -108,32 +108,15 @@ class ScreenGrab():
     def screen_grab(self, cords=[], nome=''):
         # TODO Dovrebbe funzionare sempre!!!
 
-        if not cords:
-            box = (self.cords)# cords[0][2] è la lista che contiene le coordinate dello schermo con domande + risposte
-        else:
-            box = cords
-        if not nome:
-            nome = '\\totale__'
+
+        box = (self.cords)# cords[0][2] è la lista che contiene le coordinate dello schermo con domande + risposte
+
+        nome = '\\full_snap__'
 
         self.screenshot_name = (SCREEN_DIR + nome + str(int(time.time())) + '.png')
         self.im = ImageGrab.grab(box)
         self.im.save(self.screenshot_name, 'PNG')
-        print(type(self.im))
-        print(self.im)
-
-        self.im = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
-        print(type(self.im))
-        print(self.im)
+        #self.im = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
 
 
-    def get_all_cords(self):
-        print(type(self.im))
-        y_risposte = splitanswers(self.im)
-        print(y_risposte)
-        self.cord_r1    = [self.cords[0],y_risposte[5],self.cords[2],y_risposte[4]]
-        self.cord_r2    = [self.cords[0],y_risposte[3],self.cords[2],y_risposte[2]]
-        self.cord_r3    = [self.cords[0],y_risposte[1],self.cords[2],y_risposte[0]]
-        self.cord_d     = [self.cords[0],self.cords[1],self.cords[2],y_risposte[4]]
-        print(self.cord_d, self.cord_r1, self.cord_r2, self.cord_r3)
 
-        self.cords = self.cord_d + self.cord_r1 + self.cord_r2 + self.cord_r3
