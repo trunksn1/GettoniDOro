@@ -14,10 +14,13 @@ from selenium import webdriver
 from cf import x_finale, y_finale_risposte, y_iniziale_risposte, y_finale_domande, SCREEN_DIR, RELABOR_DIR, TEST_DIR
 from splitanswers import splitanswers
 
+cords = []
+
 class ScreenGrab():
     """Oggetto deputato alla cattura dello schermo"""
     def __init__(self):
-        cords = []
+        global cords
+        self.cords = cords
         key_pressed = ''
         if not os.path.isdir(SCREEN_DIR):
             os.makedirs(SCREEN_DIR)
@@ -35,21 +38,17 @@ class ScreenGrab():
 
     def on_press(self, key):
         print('{0} pressed'.format(key))
-        if key == Key.f4:
-            """Cliccando col mouse inizi a selezionare lo schermo, rilasci per terminare"""
-            self.cords = []
-            self.key_pressed = 'F4'
-            self.cords = get_cords_old()
-            return False
+        global cords
         if key == Key.f6:
-            self.cords = []
+            cords = []
             self.key_pressed = 'F6'
             self.get_cords_new()
             return False
         if key == Key.f9:
             """Riprende le coordinate dell'ultima schermata catturata"""
-            if self.cords:
-                self.key_pressed = self.key_pressed
+            print(self.cords)
+            if cords:
+                self.key_pressed = 'F9'
                 return False
         if key == Key.f7:
             """Per testare"""
@@ -84,28 +83,16 @@ class ScreenGrab():
         # 0 coordinate domanda
         # 1 coordinate risposte
         # 2 coordinate domanda + risposte
-
+        global cords
         inizio_domande = list(self.cords[0])
-        """
-        fine_domande = [self.cords[0][0] + x_finale, self.cords[0][1] + y_finale_domande]
-        coordinate_domande = inizio_domande + fine_domande
-
-        inizio_risposte = [inizio_domande[0], fine_domande[1]]
-        fine_risposte = [fine_domande[0], inizio_risposte[1] + y_finale_risposte]
-        coordinate_risposte = inizio_risposte + fine_risposte
-
-        self.cords = [coordinate_domande, coordinate_risposte, inizio_domande + fine_risposte]
-        """
         fine_risposte = [self.cords[0][0] + x_finale, self.cords[0][1] + y_finale_domande + y_finale_risposte]
         self.cords = inizio_domande + fine_risposte
+        cords = self.cords
+        print(self.cords)
 
 
-        #print("coord_d = ", coordinate_domande)
-        #print("coord_r = ", coordinate_risposte)
-        print("coord_totali = ", self.cords)
 
-
-    def screen_grab(self, cords=[], nome=''):
+    def screen_grab(self, nome=''):
         # TODO Dovrebbe funzionare sempre!!!
 
 

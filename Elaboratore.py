@@ -71,32 +71,29 @@ class Elaboratore():
 
 
     def get_all_cords(self):
+        # Chiamo la funzione di fabrizio per avere le coordinate delle ordinate delle risposte dell'immagine elaborata
         y_risposte = splitanswers(self.img)
-        print('coordinate y_risposte: \n', y_risposte)
+
+        # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
 
-        """
-        self.cord_r1    = [self.cords[0],y_risposte[5],self.cords[2],y_risposte[4]]
-        self.cord_r2    = [self.cords[0],y_risposte[3],self.cords[2],y_risposte[2]]
-        self.cord_r3    = [self.cords[0],y_risposte[1],self.cords[2],y_risposte[0]]
-        self.cord_d     = [self.cords[0],self.cords[1],self.cords[2],y_risposte[4]]
-        """
-        self.cord_r1 = [0, y_risposte[5], x, y_risposte[4]]
-        self.cord_r2 = [0, y_risposte[3], x, y_risposte[2]]
-        self.cord_r3 = [0, y_risposte[1], x, y_risposte[0]]
+        self.cord_r1 = [100, y_risposte[5]+50, x-100, y_risposte[4]-50]
+        self.cord_r2 = [100, y_risposte[3]+50, x-100, y_risposte[2]-50]
+        self.cord_r3 = [100, y_risposte[1]+50, x-100, y_risposte[0]-50]
         self.cord_d = [0, 0, x, y_risposte[5]]
 
         self.cords = [self.cord_d] + [self.cord_r1] + [self.cord_r2] + [self.cord_r3]
 
 
     def salva_i_pezzi(self):
+        # Partendo dall'immagine elaborata e dalla lista di coordinate, salvo singolarmente le immagini della domanda
+        # e le immagini delle 3 risposte
         self.pezzi = []
 
-        print(self.cords)
-
         for n, cord in enumerate(self.cords):
+            # Adesso taglio l'immagine originale nei diversi pezzi grazie alle coordinate ottenute prima
+            # la funzione copy() serve perchè altrimenti l'immagine originale viene modificata.
             crop_img = self.img[cord[1]:cord[3], cord[0]:cord[2]].copy()
-            #[y:y + h, x:x + w].copy()
 
             if n == 0:
                 screenshot_name = (SCREEN_DIR + '\\domanda__' + str(int(time.time())) +
@@ -104,7 +101,7 @@ class Elaboratore():
             else:
                 screenshot_name = (SCREEN_DIR + '\\risposta_{}__'.format(n) + str(int(time.time())) +
                                    '.png')
-            # Percorso e nome da dare agli screenshot
+
 
             print(cord)
             print(screenshot_name)
