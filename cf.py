@@ -1,9 +1,17 @@
 import os
-SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot')
-TEST_DIR = os.path.join(os.getcwd(), 'test')
-RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni')
-PATH_INSTALLAZIONE_TESSERACT = r'E:\Tesseract-OCR\tesseract.exe'
-CHROME = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
+
+if (os.name=='posix'):
+    SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot/')
+    TEST_DIR = os.path.join(os.getcwd(), 'test/')
+    RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni/')
+    PATH_INSTALLAZIONE_TESSERACT = ('/usr/local/bin/tesseract')
+    CHROME = os.path.join('Applications','Google Chrome.app','Contents','MacOS','Google  Chrome')
+else:
+    SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot')
+    TEST_DIR = os.path.join(os.getcwd(), 'test')
+    RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni')
+    PATH_INSTALLAZIONE_TESSERACT = r'E:\Tesseract-OCR\tesseract.exe'
+    CHROME = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
 
 # Moltiplicatore per Resize dell'immagine
 mult = 5
