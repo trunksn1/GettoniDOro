@@ -11,7 +11,6 @@ from cf import SCREEN_DIR, TEST_DIR, PATH_INSTALLAZIONE_TESSERACT, RELABOR_DIR, 
 import cv2
 import numpy as np
 from urllib.parse import quote
-import subprocess
 from selenium import webdriver
 
 driver = ''
