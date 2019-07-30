@@ -10,12 +10,11 @@ from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR
 from splitanswers import splitanswers
 
 
-
 class Elaboratore():
     """Oggetto che prende lo screenshot e lo rielabora ottenendo alla fine 4 diverse immagini in bianco e nero 1 è la domandale altre tre sono le singole risposte"""
-    def __init__(self, screenshot_name, coords):
+    def __init__(self, screenshot_name):#, coords):
         self.screenshot_name = screenshot_name
-        self.cords = coords
+        #self.cords = coords
         self.perfeziona_immagine()
         print('ELABORIAMO:')
         print(self.screenshot_name)
@@ -54,7 +53,7 @@ class Elaboratore():
         # Trovato in https://stackoverflow.com/questions/45549963/how-to-improve-text-extraction-from-an-image
         # img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 2)
 
-        nome_f = RELABOR_DIR + f'\\Rielabor__' + os.path.basename(self.screenshot_name)
+        nome_f = os.path.join(RELABOR_DIR, 'Rielabor__', os.path.basename(self.screenshot_name))
         print(self.screenshot_name)
         print(nome_f)
 
@@ -73,6 +72,7 @@ class Elaboratore():
     def get_all_cords(self):
         # Chiamo la funzione di fabrizio per avere le coordinate delle ordinate delle risposte dell'immagine elaborata
         y_risposte = splitanswers(self.img)
+        print(y_risposte)
 
         # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
