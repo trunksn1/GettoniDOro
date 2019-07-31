@@ -96,12 +96,9 @@ class Elaboratore():
             crop_img = self.img[cord[1]:cord[3], cord[0]:cord[2]].copy()
 
             if n == 0:
-                screenshot_name = (SCREEN_DIR + '\\domanda__' + str(int(time.time())) +
-                                   '.png')
+                screenshot_name = os.path.join((SCREEN_DIR, 'domanda__' + str(int(time.time())) + '.png'))
             else:
-                screenshot_name = (SCREEN_DIR + '\\risposta_{}__'.format(n) + str(int(time.time())) +
-                                   '.png')
-
+                screenshot_name = os.path.join((SCREEN_DIR, 'risposta_{}__'.format(n) + str(int(time.time())) + '.png'))
 
             print(cord)
             print(screenshot_name)
