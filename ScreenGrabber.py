@@ -15,7 +15,7 @@ class ScreenGrab():
         # self.cords sarò una lista di 4 elementi.
         # I primi due sono x e y del punto in cui clicco.
         # Gli ultimi sono x e y calcolati grazie ai parametri che ho messo nel file cf.py
-        self.cords = []
+        #self.cords = []
         if not os.path.isdir(SCREEN_DIR):
             os.makedirs(SCREEN_DIR)
         if not os.path.isdir(RELABOR_DIR):
@@ -30,7 +30,6 @@ class ScreenGrab():
 
     def on_press(self, key):
         print('{0} pressed'.format(key))
-        global cords
         if key == Key.f6:
             self.cords = []
             self.key_pressed = 'F6'
@@ -69,11 +68,14 @@ class ScreenGrab():
 
         # self.cords all'inizio è una lista il cui unico elemento è una tupla con le coordinate del punto cliccato
         #inizio_domande = list(self.cords[0])
-        inizio_domande = self.cords
-        fine_risposte = [self.cords[0] + x, self.cords[1] + y]
-        self.cords = inizio_domande + fine_risposte
+        print('quante coordinate? ', len(self.cords))
+        if len(self.cords) < 4:
+            inizio_domande = self.cords
+            fine_risposte = [self.cords[0] + x, self.cords[1] + y]
+            self.cords = inizio_domande + fine_risposte
 
     def screen_grab(self, nome=''):
+        print('Prima del casino: ', self.cords)
         box = (self.cords)
         if not nome:
             nome = 'full_snap__'

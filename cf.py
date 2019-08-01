@@ -17,8 +17,8 @@ else:
 mult = 5
 
 # Dimensione dello screen grab
-x_finale = 500
-y_finale = 650
+x_finale = 470
+y_finale = 470
 
 #Dimensione dello screen grab x Domande
 y_finale_domande = 140

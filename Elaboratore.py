@@ -53,7 +53,7 @@ class Elaboratore():
         # Trovato in https://stackoverflow.com/questions/45549963/how-to-improve-text-extraction-from-an-image
         # img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 2)
 
-        nome_f = os.path.join(RELABOR_DIR, 'Rielabor__', os.path.basename(self.screenshot_name))
+        nome_f = os.path.join(RELABOR_DIR, 'Rielabor__' + os.path.basename(self.screenshot_name))
         print(self.screenshot_name)
         print(nome_f)
 
@@ -72,7 +72,7 @@ class Elaboratore():
     def get_all_cords(self):
         # Chiamo la funzione di fabrizio per avere le coordinate delle ordinate delle risposte dell'immagine elaborata
         y_risposte = splitanswers(self.img)
-        print(y_risposte)
+        print('FABRIZIO: ', y_risposte)
 
         # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
@@ -96,9 +96,9 @@ class Elaboratore():
             crop_img = self.img[cord[1]:cord[3], cord[0]:cord[2]].copy()
 
             if n == 0:
-                screenshot_name = os.path.join((SCREEN_DIR, 'domanda__' + str(int(time.time())) + '.png'))
+                screenshot_name = os.path.join(SCREEN_DIR, 'domanda__' + str(int(time.time())) + '.png')
             else:
-                screenshot_name = os.path.join((SCREEN_DIR, 'risposta_{}__'.format(n) + str(int(time.time())) + '.png'))
+                screenshot_name = os.path.join(SCREEN_DIR, 'risposta_{}__'.format(n) + str(int(time.time())) + '.png')
 
             print(cord)
             print(screenshot_name)

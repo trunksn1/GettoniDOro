@@ -3,6 +3,9 @@ import numpy as np
 from cf import SCREEN_DIR
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
+import nltk
+from nltk import word_tokenize
+from nltk.corpus import stopwords
 
 PATH_SEPARATE = os.path.join(SCREEN_DIR, 'da_concatenare')
 PATH_CONCATENATE = os.path.join(SCREEN_DIR, 'concatenate')
@@ -53,8 +56,17 @@ def diario():
             except:
                 continue
 
+def nltk_prova():
+    #s = "Stavo guardando un film in televisione con protagonisti Ficarra e Picone"
+    s = "Chi è il compagno di Ficarra?"
+    stop = stopwords.words('italian')
+    print(stop)
+    print (nltk.pos_tag(word_tokenize(s)))
+    x = [w for w in s.split() if w not in stop]
+    print(x)
 
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
-    diario()
+    #diario()
+    nltk_prova()

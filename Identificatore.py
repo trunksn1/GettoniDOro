@@ -19,7 +19,7 @@ class Identificatore():
         self.lista_files = lista_files
         self.driver = driver
         self.avvio_identificazione()
-        #self.ricerca(self.domanda, self.risposte)
+        self.ricerca(self.domanda, self.risposte)
 
     def avvio_identificazione(self):
         self.risposte = []
