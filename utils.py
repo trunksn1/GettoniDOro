@@ -65,8 +65,37 @@ def nltk_prova():
     x = [w for w in s.split() if w not in stop]
     print(x)
 
+def scrape():
+    from bs4 import BeautifulSoup
+    import requests
+    print('ciao')
+    USER_AGENT = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
+
+    #q = 'https://www.google.com/search?q=Come+si+chiama+Trump%3F+AND+%28%22Donald%22+OR+%22Ciccio%22+OR+%22Caio%22%29&oq=Come+si+chiama+Trump%3F+AND+%28%22Donald%22+OR+%22Ciccio%22+OR+%22Caio%22%29'
+    #q = 'https://www.google.com/search?q=capoluogo+calabria'
+    #q = 'https://www.google.com/search?q=ultimo+album+di+marco+mengoni'
+    #q = 'https://www.google.com/search?q=cantante+dei+guns+and+roses'
+    q = 'https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla'
+    r = requests.get(q, headers=USER_AGENT)
+    r.raise_for_status()
+    html_doc = r.text
+    soup = BeautifulSoup(html_doc, 'html.parser')
+    #x = soup.select('.Z0LcW')
+    x = soup.find(class_='Z0LcW')
+    if x:
+        try:
+            sibling = x.find('a')
+            print(sibling.contents[0])
+        except:
+            print(x.contents[0])
+    else:
+        for s in soup.find_all("div", class_="s"):#soup.select('.st'):#
+            print(s.text)
+
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
     #diario()
-    nltk_prova()
+    #nltk_prova()
+    scrape()

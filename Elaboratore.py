@@ -76,10 +76,12 @@ class Elaboratore():
 
         # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
+        print("punto y = ", y)
+        print("punto x =", x)
 
-        self.cord_r1 = [100, y_risposte[5]+50, x-100, y_risposte[4]-50]
-        self.cord_r2 = [100, y_risposte[3]+50, x-100, y_risposte[2]-50]
-        self.cord_r3 = [100, y_risposte[1]+50, x-100, y_risposte[0]-50]
+        self.cord_r1 = [100, y_risposte[5]+100, x-100, y_risposte[4]-100]
+        self.cord_r2 = [100, y_risposte[3]+100, x-100, y_risposte[2]-100]
+        self.cord_r3 = [100, y_risposte[1]+100, x-100, y_risposte[0]-100]
         self.cord_d = [0, 0, x, y_risposte[5]]
 
         self.cords = [self.cord_d] + [self.cord_r1] + [self.cord_r2] + [self.cord_r3]

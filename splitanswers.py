@@ -5,7 +5,7 @@ import numpy as np
 def splitanswers(img):
 
   positions = []
-  threshold = 150
+  threshold = 100
   flip      = 1
   
   #Average image along x to avoid false
