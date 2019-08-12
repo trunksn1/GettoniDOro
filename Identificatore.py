@@ -6,10 +6,12 @@ except ImportError:
 import os, time
 import cv2
 import numpy as np
-from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR, PATH_INSTALLAZIONE_TESSERACT
+from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR, PATH_INSTALLAZIONE_TESSERACT, WEBDRIVER_PATH, \
+    coordinate_browser, dimensioni_browser
 from selenium import webdriver
 import pytesseract
 import webbrowser
+#import prova
 
 driver = ''
 
@@ -57,7 +59,10 @@ class Identificatore():
 
         base_url = 'https://www.google.com/search?q='
         query_url = "{}+AND+({})".format(domanda_formattata_per_ricerca, risposta_formattata_per_ricerca)
+
+        # Indirizzo della sola domanda
         domanda_url = base_url + "{}".format(domanda_formattata_per_ricerca)
+        # Indirizzo per domanda + risposte
         url = base_url + query_url
 
         # Combinato:
@@ -65,11 +70,18 @@ class Identificatore():
 
 
         if not driver:
-            driver = webdriver.Chrome('E:\ChromeDriverForSelenium\chromedriver.exe')
-            driver.set_window_size(850, 1080)
-            driver.set_window_position(800, 0)
+            driver = webdriver.Chrome(WEBDRIVER_PATH)
+            driver.set_window_size(*dimensioni_browser)
+            driver.set_window_position(*coordinate_browser)
             driver.get(domanda_url)
         else:
             driver.get(domanda_url)
+
+    def valutazione(self):
+        # l'obiettivo è quello di analizzare nei due URL che apro, quante volte compaiono ciascuna delle risposte!!!
+        # E' necessario quindi analizzare con BS4 i due url, contare quante volte compaiono le singole risposte
+        # TODO: Le singole rispsote andrebbero analizzate in modo da rimuovere parole inutili e cercare solo il succo.
+        # e inviare questi dati a pysimplegui per mostrarli
+        pass
 
 

@@ -9,9 +9,14 @@ else:
     SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot')
     TEST_DIR = os.path.join(os.getcwd(), 'test')
     RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni')
-    PATH_INSTALLAZIONE_TESSERACT = r'E:\Tesseract-OCR\tesseract.exe'
+    PATH_INSTALLAZIONE_TESSERACT = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
     CHROME = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
+    WEBDRIVER_PATH = os.path.join('C:\\', 'Program Files (x86)', 'ChromeDriverForSelenium', 'chromedriver.exe')
 
+
+USER_AGENT = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+}
 
 # Moltiplicatore per Resize dell'immagine
 mult = 5
@@ -27,3 +32,6 @@ y_finale_domande = 140
 y_iniziale_risposte = 165
 y_finale_risposte = 320
 
+#Dimensioni e posizione della finestra del browser che si apre
+coordinate_browser = (1125, 0) #si apre in mezzo per lasciare al centro il quiz, il valore sul pc Milanese è 800,0
+dimensioni_browser = (850, 1080)
