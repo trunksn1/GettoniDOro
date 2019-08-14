@@ -101,7 +101,8 @@ class Mostratore():
         while True:
             event, values = window.Read(timeout=10)  # wait for up to 100 ms for a GUI event
             if event is None or event == 'F9:120' or event == 'Exit':
-
+                dur = time.time() - self.start
+                print('finale: ', dur)
 
                 print(event, 'uscendo')
                 break

@@ -4,7 +4,7 @@ try:
 except ImportError:
     import Image
 import os, time, threading
-import cv2
+import cv2, requests
 import numpy as np
 from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR, PATH_INSTALLAZIONE_TESSERACT, WEBDRIVER_PATH, \
     coordinate_browser, dimensioni_browser, USER_AGENT
@@ -12,6 +12,9 @@ from selenium import webdriver
 import pytesseract
 import webbrowser
 from Mostratore import Mostratore
+from Punteggiatore import Punteggiatore
+from multiprocessing.dummy import Pool as ThreadPool
+import concurrent.futures
 
 driver = ''
 drivers = None
@@ -21,6 +24,7 @@ class Identificatore():
         global driver
         self.lista_files = lista_files
         self.driver = driver
+        self.thread_local = threading.local()
         self.avvio_identificazione()
         self.ricerca(self.domanda, self.risposte)
 
@@ -65,6 +69,8 @@ class Identificatore():
         domanda_url = base_url + "{}".format(domanda_formattata_per_ricerca)
         # Indirizzo per domanda + risposte
         risp_url = base_url + query_url
+        coordinate_dr = [(0, 0), (1000, 0)]
+        self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
         """
         # Funziona, prova a usare il multithreading con due selenium per velocizzare
         # Combinato:
@@ -82,9 +88,9 @@ class Identificatore():
         duration = time.time() - start_time
         print('Duration: ', duration)
         Mostratore([domanda_url, risp_url], risposta)
-        """
+        
         # Funziona anche questa, ma non c'è chissà che vantaggio in termini di tempo, siamo veramente simili
-        from multiprocessing.dummy import Pool as ThreadPool
+
         global drivers
         start_time = time.time()
         pool = ThreadPool(4)
@@ -92,11 +98,20 @@ class Identificatore():
             coordinate_dr = [(0,0), (1000,0)]
             drivers = pool.map(self.set_driver, coordinate_dr)
             #print('drivers:\n', drivers)
-        pool.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])])
+        pool.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])]) # modo per usare la funzione map con due iterabili diversi
         duration = time.time() - start_time
         print('Durata: ', duration)
-        Mostratore([domanda_url, risp_url], risposta)
-        
+        """
+        #Mostratore([domanda_url, risp_url], risposta)
+        Punteggiatore([domanda_url, risp_url], risposta)
+
+    def esecutori_browser(self, coordinate_dr, domanda_url, risp_url):
+        global drivers
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            if not drivers:
+                drivers = list(executor.map(self.set_driver, coordinate_dr))
+            executor.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])]) # modo per usare la funzione map con due iterabili diversi
+
 
     def set_driver(self, coordinate_browser):
         driver = webdriver.Chrome(WEBDRIVER_PATH)
@@ -104,7 +119,5 @@ class Identificatore():
         driver.set_window_position(*coordinate_browser)
         return driver
 
-
     def open_website(self, sito_e_driver):
-        print(sito_e_driver)
         sito_e_driver[1].get(sito_e_driver[0])
