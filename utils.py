@@ -1,5 +1,6 @@
 import cv2, os, glob
 import numpy as np
+from collections import defaultdict
 from cf import SCREEN_DIR, USER_AGENT
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
@@ -106,16 +107,28 @@ def scrape(q='', risp=''):
 def trova_risposta(query, lista_risposte):
     r = requests.get(query, headers=USER_AGENT)
     r.raise_for_status()
+    print(r)
     html_doc = r.text
     soup = BeautifulSoup(html_doc, 'html.parser')
     risultati_google = soup.select('.rc')
 
+    punteggio = defaultdict(int)
+
     for risultato in risultati_google:
-        if True:
-            pass
+        for risposta in lista_risposte:
+            if risposta.lower() in str(risultato).lower():
+                punteggio[risposta] += 1
+
+
+    print(punteggio)
+    #for risultato in risultati_google:
+    #    if True:
+    #        pass
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
     #diario()
     #nltk_prova()
-    scrape()
+    #scrape()
+    trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
+                   ['revolver', 'film', 'banca'])

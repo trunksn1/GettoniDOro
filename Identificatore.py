@@ -3,17 +3,18 @@ try:
     from PIL import ImageGrab, Image
 except ImportError:
     import Image
-import os, time
+import os, time, threading
 import cv2
 import numpy as np
 from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR, PATH_INSTALLAZIONE_TESSERACT, WEBDRIVER_PATH, \
-    coordinate_browser, dimensioni_browser
+    coordinate_browser, dimensioni_browser, USER_AGENT
 from selenium import webdriver
 import pytesseract
 import webbrowser
-#import prova
+from Mostratore import Mostratore
 
 driver = ''
+drivers = None
 
 class Identificatore():
     def __init__(self, lista_files):
@@ -63,11 +64,12 @@ class Identificatore():
         # Indirizzo della sola domanda
         domanda_url = base_url + "{}".format(domanda_formattata_per_ricerca)
         # Indirizzo per domanda + risposte
-        url = base_url + query_url
-
+        risp_url = base_url + query_url
+        """
+        # Funziona, prova a usare il multithreading con due selenium per velocizzare
         # Combinato:
-        webbrowser.get().open(url, new=0, autoraise=True)
-
+        start_time = time.time()
+        webbrowser.get().open(risp_url, new=0, autoraise=True)
 
         if not driver:
             driver = webdriver.Chrome(WEBDRIVER_PATH)
@@ -77,11 +79,32 @@ class Identificatore():
         else:
             driver.get(domanda_url)
 
-    def valutazione(self):
-        # l'obiettivo è quello di analizzare nei due URL che apro, quante volte compaiono ciascuna delle risposte!!!
-        # E' necessario quindi analizzare con BS4 i due url, contare quante volte compaiono le singole risposte
-        # TODO: Le singole rispsote andrebbero analizzate in modo da rimuovere parole inutili e cercare solo il succo.
-        # e inviare questi dati a pysimplegui per mostrarli
-        pass
+        duration = time.time() - start_time
+        print('Duration: ', duration)
+        Mostratore([domanda_url, risp_url], risposta)
+        """
+        # Funziona anche questa, ma non c'è chissà che vantaggio in termini di tempo, siamo veramente simili
+        from multiprocessing.dummy import Pool as ThreadPool
+        global drivers
+        start_time = time.time()
+        pool = ThreadPool(4)
+        if not drivers:
+            coordinate_dr = [(0,0), (1000,0)]
+            drivers = pool.map(self.set_driver, coordinate_dr)
+            #print('drivers:\n', drivers)
+        pool.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])])
+        duration = time.time() - start_time
+        print('Durata: ', duration)
+        Mostratore([domanda_url, risp_url], risposta)
+        
+
+    def set_driver(self, coordinate_browser):
+        driver = webdriver.Chrome(WEBDRIVER_PATH)
+        driver.set_window_size(*dimensioni_browser)
+        driver.set_window_position(*coordinate_browser)
+        return driver
 
 
+    def open_website(self, sito_e_driver):
+        print(sito_e_driver)
+        sito_e_driver[1].get(sito_e_driver[0])
