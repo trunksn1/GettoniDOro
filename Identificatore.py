@@ -15,6 +15,7 @@ from Mostratore import Mostratore
 from Punteggiatore import Punteggiatore
 from multiprocessing.dummy import Pool as ThreadPool
 import concurrent.futures
+import threading
 
 driver = ''
 drivers = None
@@ -25,6 +26,7 @@ class Identificatore():
         self.lista_files = lista_files
         self.driver = driver
         self.thread_local = threading.local()
+
         self.avvio_identificazione()
         self.ricerca(self.domanda, self.risposte)
 
@@ -35,7 +37,6 @@ class Identificatore():
                 self.domanda = self.ocr_core(file)
             else:
                 self.risposte.append(self.ocr_core(file))
-
 
     def ocr_core(self, filename):
         """
@@ -70,7 +71,7 @@ class Identificatore():
         # Indirizzo per domanda + risposte
         risp_url = base_url + query_url
         coordinate_dr = [(0, 0), (1000, 0)]
-        self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
+        #self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
         """
         # Funziona, prova a usare il multithreading con due selenium per velocizzare
         # Combinato:
@@ -110,8 +111,14 @@ class Identificatore():
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             if not drivers:
                 drivers = list(executor.map(self.set_driver, coordinate_dr))
+            self.start = time.time()
             executor.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])]) # modo per usare la funzione map con due iterabili diversi
 
+            # Esperimento, risultato identico. Lascio per futura memoria
+            #threading.Thread(target=self.open_website, args=([(domanda_url, drivers[0])]), daemon=True).start()
+            #threading.Thread(target=self.open_website, args=([(risp_url, drivers[1])]), daemon=True).start()
+            dur = time.time() - self.start
+            print('Tempo per aprire il browser: ', dur)
 
     def set_driver(self, coordinate_browser):
         driver = webdriver.Chrome(WEBDRIVER_PATH)

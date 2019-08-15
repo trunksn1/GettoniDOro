@@ -1,9 +1,15 @@
 import PySimpleGUI as sg
 import time, queue, threading
+import concurrent.futures
+from selenium import webdriver
+from cf import dimensioni_browser, WEBDRIVER_PATH, coordinate_drivers_browser
+
+drivers = ''
 
 class Guiatore():
-    def __init__(self, lista_risposte):
+    def __init__(self, lista_risposte, urls):
         self.lista_risposte = lista_risposte
+        self.urls = urls
 
     def avvia_aggiornatori(self, punteggi):
         # -- Create a Queue to communicate with GUI --
@@ -22,6 +28,19 @@ class Guiatore():
                 punteggio[el] = 0
             key = key[:-2] + str( n +1) + key[-1:]
             gui_queue.put((key, punteggio[el]))
+
+    def queue_to_dict(self, gui_queue):
+        key_punteggio = {}
+        while True:
+            try:
+                message = gui_queue.get_nowait()
+            except queue.Empty:
+                break
+            if message:
+                key_punteggio[message[0]] = message[1]
+        print('lista creata dalla Queu: \n')
+        print(key_punteggio)
+        return key_punteggio
 
     def gui_punteggi(self, dati):# gui_queue):
         # TODO: il programma si blocca quando mostra la GUI, bisogna sfruttrare i thread
@@ -50,13 +69,28 @@ class Guiatore():
         window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True).Layout(layout)
 
         start = time.time()
+        browser_mostrato = False
+        while True:
+            event, values = window.Read(timeout=1000)  # wait for up to 100 ms for a GUI event
+            dur = time.time() - start
+            if event is None or event == 'F9:120' or event == 'Exit' or (dur > 10):
+                print('Tempo scaduto: ', dur)
+                break
+            if not browser_mostrato:
+                self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1])
+                browser_mostrato = True
+                print("Browser caricato in: ", dur)
+        window.Close()
 
+
+        """ Funzionava, ma devo testare l'apertuta del browser nell'event loop
         event, values = window.Read(timeout=8000) # dopo otto secondi la funzione termina da sola
         if event == 'Exit' or event is None or event == 'F9:120': #altrimenti termina se premo F9
             window.Close()
         dur = time.time() - start
         print(dur)
         window.Close()
+        """
 
         """
         while True:
@@ -82,15 +116,28 @@ class Guiatore():
         window.Close()
         """
 
-    def queue_to_dict(self, gui_queue):
-        key_punteggio = {}
-        while True:
-            try:
-                message = gui_queue.get_nowait()
-            except queue.Empty:
-                break
-            if message:
-                key_punteggio[message[0]] = message[1]
-        print('lista creata dalla Queu: \n')
-        print(key_punteggio)
-        return key_punteggio
+
+
+
+    def esecutori_browser(self, coordinate_dr, domanda_url, risp_url):
+        global drivers
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            if not drivers:
+                drivers = list(executor.map(self.set_driver, coordinate_dr))
+            self.start = time.time()
+            executor.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])]) # modo per usare la funzione map con due iterabili diversi
+
+            # Esperimento, risultato identico. Lascio per futura memoria
+            #threading.Thread(target=self.open_website, args=([(domanda_url, drivers[0])]), daemon=True).start()
+            #threading.Thread(target=self.open_website, args=([(risp_url, drivers[1])]), daemon=True).start()
+            dur = time.time() - self.start
+            print('Tempo per aprire il browser: ', dur)
+
+    def set_driver(self, coordinate_browser):
+        driver = webdriver.Chrome(WEBDRIVER_PATH)
+        driver.set_window_size(*dimensioni_browser)
+        driver.set_window_position(*coordinate_browser)
+        return driver
+
+    def open_website(self, sito_e_driver):
+        sito_e_driver[1].get(sito_e_driver[0])

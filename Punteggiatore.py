@@ -10,7 +10,7 @@ from Guiatore import Guiatore
 
 class Punteggiatore():
     def __init__(self, urls, lista_risposte):
-        self.win = Guiatore(lista_risposte)
+        self.win = Guiatore(lista_risposte, urls)
         self.thread_local = threading.local()
         self.lista_url = urls
         #self.gui_punteggi()
@@ -21,8 +21,6 @@ class Punteggiatore():
         print("nel ponteggiatore: \n")
         print(self.punteggi, type(self.punteggi))
         self.win.avvia_aggiornatori(self.punteggi)
-
-
 
     def get_session(self):
         if not hasattr(self.thread_local, "session"):
