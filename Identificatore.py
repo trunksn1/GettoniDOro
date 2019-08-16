@@ -71,7 +71,7 @@ class Identificatore():
         # Indirizzo per domanda + risposte
         risp_url = base_url + query_url
         coordinate_dr = [(0, 0), (1000, 0)]
-        #self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
+        self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
         """
         # Funziona, prova a usare il multithreading con due selenium per velocizzare
         # Combinato:

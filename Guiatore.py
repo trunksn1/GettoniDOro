@@ -69,6 +69,14 @@ class Guiatore():
         window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True).Layout(layout)
 
         start = time.time()
+        while True:
+            event, values = window.Read(timeout=1000)  # wait for up to 100 ms for a GUI event
+            dur = time.time() - start
+            if event is None or event == 'F9:120' or event == 'Exit' or (dur > 10):
+                print('Tempo scaduto: ', dur)
+                break
+        window.Close()
+        """Sarebbe Fantastico se funzionasse, ma si blocca per RunTimeError collegato a Tkinter
         browser_mostrato = False
         while True:
             event, values = window.Read(timeout=1000)  # wait for up to 100 ms for a GUI event
@@ -81,6 +89,7 @@ class Guiatore():
                 browser_mostrato = True
                 print("Browser caricato in: ", dur)
         window.Close()
+        """
 
 
         """ Funzionava, ma devo testare l'apertuta del browser nell'event loop
