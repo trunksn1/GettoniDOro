@@ -5,6 +5,8 @@ from selenium import webdriver
 from cf import dimensioni_browser, WEBDRIVER_PATH, coordinate_drivers_browser
 
 drivers = ''
+driver1 = ''
+driver2 = ''
 
 class Guiatore():
     def __init__(self, lista_risposte, urls):
@@ -42,93 +44,84 @@ class Guiatore():
         print(key_punteggio)
         return key_punteggio
 
-    def gui_punteggi(self, dati):# gui_queue):
+    def gui_punteggi(self, dati):
         # TODO: il programma si blocca quando mostra la GUI, bisogna sfruttrare i thread
         sg.ChangeLookAndFeel('GreenTan')
 
-        """
-        layout = [
-            # [sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD', size=(15, 1)), sg.Text('+Risp', size=(15, 1)), sg.Text('TOT', size=(15, 1))],
-            [sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD'), sg.Text('+Risp'), sg.Text('TOT')],
-            [sg.Text(self.lista_risposte[0], size=(15, 1)), sg.Text('', key='_d_R1_', justification='right', size=(3, 1)), sg.Text('', key='_dr_R1_', justification='right', size=(3, 1)), sg.Text('', key='_TOT_R1_', justification='right', size=(3, 1))],
-            [sg.Text(self.lista_risposte[1], size=(15, 1)), sg.Text('', key='_d_R2_', justification='right', size=(3, 1)), sg.Text('', key='_dr_R2_', justification='right', size=(3, 1)), sg.Text('', key='_TOT_R2_', justification='right', size=(3, 1))],
-            [sg.Text(self.lista_risposte[2], size=(15, 1)), sg.Text('', key='_d_R3_', justification='right', size=(3, 1)), sg.Text('', key='_dr_R3_', justification='right', size=(3, 1)), sg.Text('', key='_TOT_R3_', justification='right', size=(3, 1))],
-            [sg.Exit()]
-        ]
-        """
-
-
         layout = [
             [sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD'), sg.Text('+Risp'), sg.Text('TOT')],
-            [sg.Text(self.lista_risposte[0], size=(15, 1)), sg.Text(dati['_d_R1_'], key='_d_R1_', justification='right', size=(3, 1)), sg.Text(dati['_dr_R1_'], key='_dr_R1_', justification='right', size=(3, 1)), sg.Text(dati['_TOT_R1_'], key='_TOT_R1_', justification='right', size=(3, 1))],
-            [sg.Text(self.lista_risposte[1], size=(15, 1)), sg.Text(dati['_d_R2_'], key='_d_R2_', justification='right', size=(3, 1)), sg.Text(dati['_dr_R2_'], key='_dr_R2_', justification='right', size=(3, 1)), sg.Text(dati['_TOT_R2_'], key='_TOT_R2_', justification='right', size=(3, 1))],
-            [sg.Text(self.lista_risposte[2], size=(15, 1)), sg.Text(dati['_d_R3_'], key='_d_R3_', justification='right', size=(3, 1)), sg.Text(dati['_dr_R3_'], key='_dr_R3_', justification='right', size=(3, 1)), sg.Text(dati['_TOT_R3_'], key='_TOT_R3_', justification='right', size=(3, 1))],
+            [sg.Text(self.lista_risposte[0], size=(15, 1)),
+             sg.Text(dati['_d_R1_'], key='_d_R1_', justification='right', size=(3, 1)),
+             sg.Text(dati['_dr_R1_'], key='_dr_R1_', justification='right', size=(3, 1)),
+             sg.Text(dati['_TOT_R1_'], key='_TOT_R1_', justification='right', size=(3, 1))],
+            [sg.Text(self.lista_risposte[1], size=(15, 1)),
+             sg.Text(dati['_d_R2_'], key='_d_R2_', justification='right', size=(3, 1)),
+             sg.Text(dati['_dr_R2_'], key='_dr_R2_', justification='right', size=(3, 1)),
+             sg.Text(dati['_TOT_R2_'], key='_TOT_R2_', justification='right', size=(3, 1))],
+            [sg.Text(self.lista_risposte[2], size=(15, 1)),
+             sg.Text(dati['_d_R3_'], key='_d_R3_', justification='right', size=(3, 1)),
+             sg.Text(dati['_dr_R3_'], key='_dr_R3_', justification='right', size=(3, 1)),
+             sg.Text(dati['_TOT_R3_'], key='_TOT_R3_', justification='right', size=(3, 1))],
             [sg.Exit()]
         ]
 
         window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True).Layout(layout)
 
         start = time.time()
-        while True:
-            event, values = window.Read(timeout=1000)  # wait for up to 100 ms for a GUI event
-            dur = time.time() - start
-            if event is None or event == 'F9:120' or event == 'Exit' or (dur > 10):
-                print('Tempo scaduto: ', dur)
-                break
-        window.Close()
-        """Sarebbe Fantastico se funzionasse, ma si blocca per RunTimeError collegato a Tkinter
         browser_mostrato = False
         while True:
-            event, values = window.Read(timeout=1000)  # wait for up to 100 ms for a GUI event
             dur = time.time() - start
-            if event is None or event == 'F9:120' or event == 'Exit' or (dur > 10):
-                print('Tempo scaduto: ', dur)
-                break
             if not browser_mostrato:
-                self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1])
+# Read lancia un event loop, attraverso il parametro timeout viene restituito il param timeout_key  ogni x millisecondi
+                event, _ = window.Read(timeout=1000, timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
                 browser_mostrato = True
-                print("Browser caricato in: ", dur)
-        window.Close()
-        """
 
-
-        """ Funzionava, ma devo testare l'apertuta del browser nell'event loop
-        event, values = window.Read(timeout=8000) # dopo otto secondi la funzione termina da sola
-        if event == 'Exit' or event is None or event == 'F9:120': #altrimenti termina se premo F9
-            window.Close()
-        dur = time.time() - start
-        print(dur)
-        window.Close()
-        """
-
-        """
-        while True:
-
-            event, values = window.Read(timeout=10)  # wait for up to 100 ms for a GUI event
-            dur = time.time() - start
-            if event is None or event == 'F9:120' or event == 'Exit' or (dur > 10):
+            if event == 'F9:120' or event == 'Exit' or (dur >= 4):
                 print('Tempo scaduto: ', dur)
                 break
-            # --------------- Loop through all messages coming in from threads ---------------
-            while True:  # loop executes until runs out of messages in Queue
-                try:  # see if something has been posted to Queue
-                    message = gui_queue.get_nowait()
-                except queue.Empty:  # get_nowait() will get exception when Queue is empty
-                    break  # break from the loop if no more messages are queued up
-                # if message received from queue, display the message in the Window
-                if message:
-                    window.Element(message[0]).Update(message[1])
-                    window.Refresh()  # do a refresh because could be showing multiple messages before next Read
 
-
-        # if user exits the window, then close the window and exit the GUI func
         window.Close()
-        """
-
 
 
 
     def esecutori_browser(self, coordinate_dr, domanda_url, risp_url):
+        """ Funziona ma ho bisogno di sapere
+        print('allinterno dell esecutori')
+        print(domanda_url, risp_url)
+        global driver1, driver2
+
+        if not driver1 or not driver2:
+            driver1 = self.set_driver(coordinate_dr[0])
+            driver2 = self.set_driver(coordinate_dr[1])
+        """
+
+        global drivers
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            if not drivers:
+                drivers = list(executor.map(self.set_driver, coordinate_dr))
+
+        # Tutto questo è per evitare il RunTimeError che lancia Tkinter quando durante l'esecuzione della gui
+        # esci dal thread principale.
+        # In pratica sfrutto gli oggetti Queue, per conservarci dentro la funzione che apre il browser
+        q = queue.Queue()
+
+        # adesso sto conservando nella queue, la funzione lambda che è pari a quella definita dopo di open_website()
+        q.put(lambda: self.open_website([domanda_url, drivers[0]])) #driver1]))
+        q.put(lambda: self.open_website([risp_url, drivers[1]])) #driver2]))
+
+        # Questo loop serve a controllare se c'è qualcosa nella queue
+        while True:
+            # se la queue ha qualcosa (in questo caso una funzione da lancaire) conservala in una variabile
+            try:
+                # metto il contenuto della queue (la funzione openwebsite) nella variabile f
+                f = q.get_nowait()  # prendo il contenuto della queue e poi la svuoto
+                # la funzione conservata viene lanciata adesso
+                f()
+            except queue.Empty:
+                # se la queue è vuota (perchè l'abbiamo svuotata grazue al metodo .get_nowait()
+                break
+
+    def esecutori_browser_old(self, coordinate_dr, domanda_url, risp_url):
         global drivers
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             if not drivers:
@@ -149,4 +142,17 @@ class Guiatore():
         return driver
 
     def open_website(self, sito_e_driver):
+        print('sito e driver')
+        print(sito_e_driver[1], sito_e_driver[0])
         sito_e_driver[1].get(sito_e_driver[0])
+
+if __name__ == '__main__':
+    from collections import defaultdict, Counter
+    risposte = ['tizio', 'cazio', 'sempronio']
+    urls = ['https://www.google.com/search?q=come+si+chiamava+Cesare', 'https://www.google.com/search?q=come+si+chiamava+Cesare%3F+AND+%28"tizio"+OR+"caio"+OR+"sempronio"%29']
+    for i in range (40):
+        x = Guiatore(risposte, urls)
+        punteggi = [defaultdict(int), defaultdict(int), defaultdict(int)]
+        x.avvia_aggiornatori(punteggi)
+
+        print('*** FINE DEL TENTATIVO NUMERO {} ********'.format(i+1))
