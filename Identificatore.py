@@ -43,8 +43,12 @@ class Identificatore():
         This function will handle the core OCR processing of images.
         """
         pytesseract.pytesseract.tesseract_cmd = PATH_INSTALLAZIONE_TESSERACT
-        text = pytesseract.image_to_string(Image.open(
-            filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+        try:
+            text = pytesseract.image_to_string(Image.open(
+                filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+        except Exception as e:
+            print(e)
+            text = ''
         print(text)
         return text
 
@@ -71,7 +75,7 @@ class Identificatore():
         # Indirizzo per domanda + risposte
         risp_url = base_url + query_url
         coordinate_dr = [(0, 0), (1000, 0)]
-        self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
+        #self.esecutori_browser(coordinate_dr, domanda_url, risp_url)
         """
         # Funziona, prova a usare il multithreading con due selenium per velocizzare
         # Combinato:

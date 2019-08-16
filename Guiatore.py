@@ -17,14 +17,14 @@ class Guiatore():
         # -- Create a Queue to communicate with GUI --
         gui_queue = queue.Queue()  # queue used to communicate between the gui and the threads
         # -- Start worker threads, one runs twice as often as the other
-        threading.Thread(target=self.aggiornatore_gui, args=(gui_queue, punteggi[0], '_d_RX_',), daemon=True).start()
-        threading.Thread(target=self.aggiornatore_gui, args=(gui_queue, punteggi[1], '_dr_RX_',), daemon=True).start()
-        threading.Thread(target=self.aggiornatore_gui, args=(gui_queue, punteggi[2], '_TOT_RX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[0], '_d_RX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[1], '_dr_RX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[2], '_TOT_RX_',), daemon=True).start()
         # -- Start the GUI passing in the Queue --
         dict_dati_per_gui = self.queue_to_dict(gui_queue)
-        self.gui_punteggi(dict_dati_per_gui)
+        self.creatore_gui(dict_dati_per_gui)
 
-    def aggiornatore_gui(self, gui_queue, punteggio, key):
+    def aggiornatore_guiqueue__key_punteggio(self, gui_queue, punteggio, key):
         for n, el in enumerate(self.lista_risposte):  # loop forever, keeping count in i as it loops
             if not punteggio[el]:
                 punteggio[el] = 0
@@ -32,6 +32,7 @@ class Guiatore():
             gui_queue.put((key, punteggio[el]))
 
     def queue_to_dict(self, gui_queue):
+        # Il dizionario {key_della_gui: punteggio_della_risposta_corrispondente}
         key_punteggio = {}
         while True:
             try:
@@ -44,7 +45,7 @@ class Guiatore():
         print(key_punteggio)
         return key_punteggio
 
-    def gui_punteggi(self, dati):
+    def creatore_gui(self, dati):
         # TODO: il programma si blocca quando mostra la GUI, bisogna sfruttrare i thread
         sg.ChangeLookAndFeel('GreenTan')
 
@@ -65,24 +66,36 @@ class Guiatore():
             [sg.Exit()]
         ]
 
-        window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True).Layout(layout)
+        window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True, keep_on_top=True).Layout(layout)
 
         start = time.time()
         browser_mostrato = False
         while True:
             dur = time.time() - start
             if not browser_mostrato:
-# Read lancia un event loop, attraverso il parametro timeout viene restituito il param timeout_key  ogni x millisecondi
-                event, _ = window.Read(timeout=1000, timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
+            # Read lancia un event loop, attraverso il parametro timeout ogni X millisecondi
+            # viene restituito il contenuto del parametro timeout_key
+                event, _ = window.Read(timeout=1000, timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
                 browser_mostrato = True
 
-            if event == 'F9:120' or event == 'Exit' or (dur >= 4):
+            if event == 'F9:120' or event == 'Exit' or (dur >= 8):
                 print('Tempo scaduto: ', dur)
                 break
 
         window.Close()
 
-
+    def ottieni_drivers(self, coordinate_dr):
+        global drivers
+        if not drivers:
+            print("OTTINI DRIVERS")
+            drivers_queue = queue.Queue()
+            threading.Thread(target=self.set_driver_new, args=(coordinate_dr[0], drivers_queue,), daemon=False).start()
+            threading.Thread(target=self.set_driver_new, args=(coordinate_dr[1], drivers_queue,), daemon=False).start()
+            drivers = self.queue_driver_to_list(drivers_queue)
+            print("DRIVERS OTTENUTI:\n", drivers)
+            if len(drivers) == 2:
+                self.esecutori_browser(drivers, self.urls[0], self.urls[1])
+        self.esecutori_browser(drivers, self.urls[0], self.urls[1])
 
     def esecutori_browser(self, coordinate_dr, domanda_url, risp_url):
         """ Funziona ma ho bisogno di sapere
@@ -94,11 +107,14 @@ class Guiatore():
             driver1 = self.set_driver(coordinate_dr[0])
             driver2 = self.set_driver(coordinate_dr[1])
         """
+        print('Driver ottenuti col get:\n', coordinate_dr)
 
+        """Funzionava, ma voglio usare il queue per stare tranquillo
         global drivers
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             if not drivers:
                 drivers = list(executor.map(self.set_driver, coordinate_dr))
+        """
 
         # Tutto questo è per evitare il RunTimeError che lancia Tkinter quando durante l'esecuzione della gui
         # esci dal thread principale.
@@ -106,8 +122,8 @@ class Guiatore():
         q = queue.Queue()
 
         # adesso sto conservando nella queue, la funzione lambda che è pari a quella definita dopo di open_website()
-        q.put(lambda: self.open_website([domanda_url, drivers[0]])) #driver1]))
-        q.put(lambda: self.open_website([risp_url, drivers[1]])) #driver2]))
+        q.put(lambda: self.open_website([domanda_url, coordinate_dr[0]])) #driver1]))
+        q.put(lambda: self.open_website([risp_url, coordinate_dr[1]])) #driver2]))
 
         # Questo loop serve a controllare se c'è qualcosa nella queue
         while True:
@@ -123,6 +139,7 @@ class Guiatore():
 
     def esecutori_browser_old(self, coordinate_dr, domanda_url, risp_url):
         global drivers
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             if not drivers:
                 drivers = list(executor.map(self.set_driver, coordinate_dr))
@@ -135,6 +152,31 @@ class Guiatore():
             dur = time.time() - self.start
             print('Tempo per aprire il browser: ', dur)
 
+    def set_driver_new(self, coordinate_browser, queue):
+        driver = webdriver.Chrome(WEBDRIVER_PATH)
+        driver.set_window_size(*dimensioni_browser)
+        driver.set_window_position(*coordinate_browser)
+        print("set_drive: ", driver)
+        queue.put(driver)
+
+    def queue_driver_to_list(self, driv_queue):
+        drivers = []
+        while True:
+            try:
+                print('try')
+                driv = driv_queue.get()
+                print(driv)
+            except queue.Empty:
+                print('except')
+                continue
+            if driv:
+                drivers.append(driv)
+            if len(drivers) == 2:
+                print("ECCOLI: ", drivers)
+                break
+        return drivers
+
+
     def set_driver(self, coordinate_browser):
         driver = webdriver.Chrome(WEBDRIVER_PATH)
         driver.set_window_size(*dimensioni_browser)
@@ -142,8 +184,6 @@ class Guiatore():
         return driver
 
     def open_website(self, sito_e_driver):
-        print('sito e driver')
-        print(sito_e_driver[1], sito_e_driver[0])
         sito_e_driver[1].get(sito_e_driver[0])
 
 if __name__ == '__main__':
