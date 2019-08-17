@@ -70,11 +70,16 @@ class Guiatore():
         browser_mostrato = False
         while True:
             dur = time.time() - start
-            if not browser_mostrato:
+
             # Read lancia un event loop, attraverso il parametro timeout ogni X millisecondi
             # viene restituito il contenuto del parametro timeout_key
-                event, _ = window.Read(timeout=1000, timeout_key=self.esecutori_browser(self.drivers, self.urls[0], self.urls[1])) #timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
+            event, _ = window.Read(timeout=1000) #, timeout_key=self.esecutori_browser(self.drivers, self.urls[0], self.urls[1])) #timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
+
+            if not browser_mostrato:
+                self.esecutori_browser(self.drivers, self.urls[0], self.urls[1])
                 browser_mostrato = True
+            print(dur)
+
 
             if event == 'F9:120' or event == 'Exit' or (dur >= 10):
                 print('Tempo scaduto: ', dur)
@@ -86,9 +91,10 @@ class Guiatore():
         # Tutto questo è per evitare il RunTimeError che lancia Tkinter quando durante l'esecuzione della gui
         # esci dal thread principale.
         # In pratica sfrutto gli oggetti Queue, per conservarci dentro la funzione che apre il browser
+        # TODO Col cazzo! L'errore continua a presentarsi, tutta fatica per niente!
         q = queue.Queue()
 
-        # adesso sto conservando nella queue, la funzione lambda che è pari a quella definita dopo di open_website()
+        # adesso sto conservando nella queue la funzione lambda, questa è in pratica la funzione open_website()
         q.put(lambda: self.open_website([domanda_url, coordinate_dr[0]])) #driver1]))
         q.put(lambda: self.open_website([risp_url, coordinate_dr[1]])) #driver2]))
 
