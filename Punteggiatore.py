@@ -8,8 +8,8 @@ import threading
 from Guiatore import Guiatore
 
 class Punteggiatore():
-    def __init__(self, urls, lista_risposte):
-        self.win = Guiatore(lista_risposte, urls)
+    def __init__(self, urls, lista_risposte, oggetto_creatore_gui):
+        self.win = oggetto_creatore_gui #Guiatore(lista_risposte, urls)
         self.thread_local = threading.local()
         self.lista_url = urls
         self.lista_risposte = lista_risposte

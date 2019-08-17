@@ -8,9 +8,10 @@ driver1 = ''
 driver2 = ''
 
 class Guiatore():
-    def __init__(self, lista_risposte, urls):
+    def __init__(self, lista_risposte, urls, drivers):
         self.lista_risposte = lista_risposte
         self.urls = urls
+        self.drivers = drivers
 
     def avvia_aggiornatori(self, punteggi):
         # -- Create a Queue to communicate with GUI --
@@ -72,7 +73,7 @@ class Guiatore():
             if not browser_mostrato:
             # Read lancia un event loop, attraverso il parametro timeout ogni X millisecondi
             # viene restituito il contenuto del parametro timeout_key
-                event, _ = window.Read(timeout=1000, timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
+                event, _ = window.Read(timeout=1000, timeout_key=self.esecutori_browser(self.drivers, self.urls[0], self.urls[1])) #timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
                 browser_mostrato = True
 
             if event == 'F9:120' or event == 'Exit' or (dur >= 10):
@@ -80,17 +81,6 @@ class Guiatore():
                 break
 
         window.Close()
-
-    def ottieni_drivers(self, coordinate_dr):
-        global drivers
-        if not drivers:
-            drivers_queue = queue.Queue()
-            threading.Thread(target=self.set_driver_new, args=(coordinate_dr[0], drivers_queue,), daemon=False).start()
-            threading.Thread(target=self.set_driver_new, args=(coordinate_dr[1], drivers_queue,), daemon=False).start()
-            drivers = self.queue_driver_to_list(drivers_queue)
-            if len(drivers) == 2:
-                self.esecutori_browser(drivers, self.urls[0], self.urls[1])
-        self.esecutori_browser(drivers, self.urls[0], self.urls[1])
 
     def esecutori_browser(self, coordinate_dr, domanda_url, risp_url):
         # Tutto questo è per evitare il RunTimeError che lancia Tkinter quando durante l'esecuzione della gui
@@ -113,30 +103,6 @@ class Guiatore():
             except queue.Empty:
                 # se la queue è vuota (perchè l'abbiamo svuotata grazue al metodo .get_nowait()
                 break
-
-    def set_driver_new(self, coordinate_browser, queue):
-        driver = webdriver.Chrome(WEBDRIVER_PATH)
-        driver.set_window_size(*dimensioni_browser)
-        driver.set_window_position(*coordinate_browser)
-        print("set_drive: ", driver)
-        queue.put(driver)
-
-    def queue_driver_to_list(self, driv_queue):
-        drivers = []
-        while True:
-            try:
-                print('try')
-                driv = driv_queue.get()
-                print(driv)
-            except queue.Empty:
-                print('except')
-                continue
-            if driv:
-                drivers.append(driv)
-            if len(drivers) == 2:
-                print("ECCOLI: ", drivers)
-                break
-        return drivers
 
     def open_website(self, sito_e_driver):
         sito_e_driver[1].get(sito_e_driver[0])
