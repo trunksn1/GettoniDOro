@@ -1,6 +1,5 @@
 import PySimpleGUI as sg
 import time, queue, threading
-import concurrent.futures
 from selenium import webdriver
 from cf import dimensioni_browser, WEBDRIVER_PATH, coordinate_drivers_browser
 
@@ -41,8 +40,6 @@ class Guiatore():
                 break
             if message:
                 key_punteggio[message[0]] = message[1]
-        print('lista creata dalla Queu: \n')
-        print(key_punteggio)
         return key_punteggio
 
     def creatore_gui(self, dati):
@@ -78,7 +75,7 @@ class Guiatore():
                 event, _ = window.Read(timeout=1000, timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
                 browser_mostrato = True
 
-            if event == 'F9:120' or event == 'Exit' or (dur >= 8):
+            if event == 'F9:120' or event == 'Exit' or (dur >= 10):
                 print('Tempo scaduto: ', dur)
                 break
 
@@ -87,35 +84,15 @@ class Guiatore():
     def ottieni_drivers(self, coordinate_dr):
         global drivers
         if not drivers:
-            print("OTTINI DRIVERS")
             drivers_queue = queue.Queue()
             threading.Thread(target=self.set_driver_new, args=(coordinate_dr[0], drivers_queue,), daemon=False).start()
             threading.Thread(target=self.set_driver_new, args=(coordinate_dr[1], drivers_queue,), daemon=False).start()
             drivers = self.queue_driver_to_list(drivers_queue)
-            print("DRIVERS OTTENUTI:\n", drivers)
             if len(drivers) == 2:
                 self.esecutori_browser(drivers, self.urls[0], self.urls[1])
         self.esecutori_browser(drivers, self.urls[0], self.urls[1])
 
     def esecutori_browser(self, coordinate_dr, domanda_url, risp_url):
-        """ Funziona ma ho bisogno di sapere
-        print('allinterno dell esecutori')
-        print(domanda_url, risp_url)
-        global driver1, driver2
-
-        if not driver1 or not driver2:
-            driver1 = self.set_driver(coordinate_dr[0])
-            driver2 = self.set_driver(coordinate_dr[1])
-        """
-        print('Driver ottenuti col get:\n', coordinate_dr)
-
-        """Funzionava, ma voglio usare il queue per stare tranquillo
-        global drivers
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            if not drivers:
-                drivers = list(executor.map(self.set_driver, coordinate_dr))
-        """
-
         # Tutto questo è per evitare il RunTimeError che lancia Tkinter quando durante l'esecuzione della gui
         # esci dal thread principale.
         # In pratica sfrutto gli oggetti Queue, per conservarci dentro la funzione che apre il browser
@@ -136,21 +113,6 @@ class Guiatore():
             except queue.Empty:
                 # se la queue è vuota (perchè l'abbiamo svuotata grazue al metodo .get_nowait()
                 break
-
-    def esecutori_browser_old(self, coordinate_dr, domanda_url, risp_url):
-        global drivers
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            if not drivers:
-                drivers = list(executor.map(self.set_driver, coordinate_dr))
-            self.start = time.time()
-            executor.map(self.open_website, [(domanda_url, drivers[0]), (risp_url, drivers[1])]) # modo per usare la funzione map con due iterabili diversi
-
-            # Esperimento, risultato identico. Lascio per futura memoria
-            #threading.Thread(target=self.open_website, args=([(domanda_url, drivers[0])]), daemon=True).start()
-            #threading.Thread(target=self.open_website, args=([(risp_url, drivers[1])]), daemon=True).start()
-            dur = time.time() - self.start
-            print('Tempo per aprire il browser: ', dur)
 
     def set_driver_new(self, coordinate_browser, queue):
         driver = webdriver.Chrome(WEBDRIVER_PATH)
@@ -175,13 +137,6 @@ class Guiatore():
                 print("ECCOLI: ", drivers)
                 break
         return drivers
-
-
-    def set_driver(self, coordinate_browser):
-        driver = webdriver.Chrome(WEBDRIVER_PATH)
-        driver.set_window_size(*dimensioni_browser)
-        driver.set_window_position(*coordinate_browser)
-        return driver
 
     def open_website(self, sito_e_driver):
         sito_e_driver[1].get(sito_e_driver[0])

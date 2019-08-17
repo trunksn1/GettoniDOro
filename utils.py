@@ -1,13 +1,16 @@
 import cv2, os, glob
+import csv
 import numpy as np
 from collections import defaultdict
 from cf import SCREEN_DIR, USER_AGENT
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
+from Punteggiatore import Punteggiatore
 from bs4 import BeautifulSoup
 import requests
 import nltk
 from nltk import word_tokenize
+import pprint
 from nltk.corpus import stopwords
 
 PATH_SEPARATE = os.path.join(SCREEN_DIR, 'da_concatenare')
@@ -58,6 +61,66 @@ def diario():
                 log.write('\n' + '\n')
             except:
                 continue
+
+def diario_csv():
+    print('SCRIVERO')
+    immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
+    with open(os.path.join(PATH_DOM_RSP, 'diario.csv'), 'w') as log:
+        for n, immagine in enumerate(immagini_da_studiare):
+            if n == 1000:
+                break
+            try:
+                scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                print(immagine)
+                el = Elaboratore(immagine)
+                id = Identificatore(el.pezzi)
+                pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte)
+                mess = '****** Domanda numero: {} ******'.format(n)
+                print(mess)
+                print(id.domanda)
+                print(id.risposte)
+                print(pp.punteggi)
+                scrivente.writerow([])
+                scrivente.writerow([mess, '****', '****', '****'])
+                scrivente.writerow([id.domanda, 'SoloD', '+Risp', 'TOT'])
+                for i in range(3):
+                    scrivente.writerow([id.risposte[i], pp.punteggi[0][id.risposte[i]], pp.punteggi[1][id.risposte[i]], pp.punteggi[2][id.risposte[i]]])
+            except AttributeError:
+                print(immagine, 'AttributeErrr')
+                continue
+            except IndexError:
+                print(immagine, 'IndexError')
+                continue
+
+
+def download_site(*url):
+    session = requests.Session()
+    with session.get(url, headers=USER_AGENT) as r:
+        print(f"Read {len(r.content)} from {url}")
+        r.raise_for_status()
+        print(r)
+        html_doc = r.text
+        soup = BeautifulSoup(html_doc, 'html.parser')
+        #print(soup)
+        #risultati_google = soup.select('.bkWMgd .st')
+        for g in soup.find_all(class_='g'):
+            print(g.text)
+            print('-----')
+        """    
+        #TODO: questo funziona ma non vede il primo box che compare in alto come nel caso del capoluogo della calabria
+        risultati_google = soup.find_all('div', attrs={'class':'bkWMgd'})
+        for r in risultati_google:
+            b = r.find_all('span', attrs={'class':'st'})
+            for x in b:
+                print(x.get_text())
+            #pprint.pprint(b)
+        """
+
+        #pprint.pprint(risultati_google)
+        #print(len(risultati_google))
+        # TODO qui
+        #exit()
+
 
 def nltk_prova():
     #s = "Stavo guardando un film in televisione con protagonisti Ficarra e Picone"
@@ -127,8 +190,17 @@ def trova_risposta(query, lista_risposte):
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
-    #diario()
+    #diario_csv()
     #nltk_prova()
     #scrape()
-    trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
-                   ['revolver', 'film', 'banca'])
+    #trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
+    #               ['revolver', 'film', 'banca'])
+    url = [
+        'https://www.google.com/search?q=a+cosa+corrisponde+sigla+usa&oq=a+cosa+corrisponde+sigla+usa',
+        'https://www.google.com/search?q=capoluogo+della+calabria',
+        'https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
+        'https://www.google.com/search?q=chi+è+il+ministro+degli+affari+esteri+europeo',
+
+        ]
+
+    download_site(url)

@@ -6,7 +6,7 @@ except ImportError:
 import os, time
 import cv2
 import numpy as np
-from cf import mult, SCREEN_DIR, RELABOR_DIR, TEST_DIR
+from cf import mult, SCREEN_DIR, RELABOR_DIR
 from splitanswers import splitanswers
 
 

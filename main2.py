@@ -2,6 +2,10 @@ import os
 from ScreenGrabber import ScreenGrab
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
+from Punteggiatore import Punteggiatore
+
+
+
 
 screen_grabber = ScreenGrab()
 while True:
@@ -13,3 +17,5 @@ while True:
 
     y = Elaboratore(screen_grabber.screenshot_name)
     z = Identificatore(y.pezzi)
+    pp = Punteggiatore([z.domanda_url, z.risp_url], z.risposte)
+

@@ -3,12 +3,14 @@ if (os.name=='posix'):
     SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot/')
     TEST_DIR = os.path.join(os.getcwd(), 'test/')
     RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni/')
+    STATE_JSON = os.path.join(os.getcwd(), 'program_state.json')
     PATH_INSTALLAZIONE_TESSERACT = ('/usr/local/bin/tesseract')
     CHROME = os.path.join('Applications','Google Chrome.app','Contents','MacOS','Google  Chrome')
 else:
     SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot')
     TEST_DIR = os.path.join(os.getcwd(), 'test')
     RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni')
+    STATE_JSON = os.path.join(os.getcwd(), 'program_state.json')
     PATH_INSTALLAZIONE_TESSERACT = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
     CHROME = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
     WEBDRIVER_PATH = os.path.join('C:\\', 'Program Files (x86)', 'ChromeDriverForSelenium', 'chromedriver.exe')
@@ -37,5 +39,5 @@ coordinate_browser = (1125, 0) #si apre in mezzo per lasciare al centro il quiz,
 
 dimensioni_browser = (795, 1080) # prima era (850, 1080)
 
-coordinate_drivers_browser = [(0, 0), (800, 0)]
+coordinate_drivers_browser = [(550, 0), (-120, 0)]
 
