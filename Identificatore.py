@@ -47,25 +47,35 @@ class Identificatore():
 
     def prepara_url_da_ricercare(self, domanda, risposta):
         global driver
+        base_url = 'https://www.google.com/search?q='
         domanda_formattata_per_ricerca = "+".join(domanda.split())
         if type(risposta) == list:
             r = []
             for risp in risposta:
                 if not (risp) or (risp == ' '):
                     continue
-                risp = "+".join(risp.split())
+                risp = "+".join(risp.split())   # Se la risposta era Santa Rosalia adesso sarà Santa+Rosalia
                 # %22 è nell'url ciò che sostituisce il carattere delle virgolette ""
-                r.append('%22{}%22'.format(risp))
-            risposta_formattata_per_ricerca = "+OR+".join(r)
+                r.append('%22{}%22'.format(risp))   # Adesso circondiamo con le virgolette: "Santa+Rosalia"
+            risposta_formattata_per_ricerca = "+OR+".join(r)   # Attacchiamo le risposte "Santa+Rosalia"+OR+"Santa+Anna"
         else:
             risposta_formattata_per_ricerca = "+".join(risposta.split())
 
-        base_url = 'https://www.google.com/search?q='
+
         query_url = "{}+AND+({})".format(domanda_formattata_per_ricerca, risposta_formattata_per_ricerca)
+
+        # Lista contenente i tre url per domanda + 1 risposta.
+        self.lista_singole_risposte_formattate_per_ricerca = []
+        for risposta_formattata in r:
+            fine_url = "{}+AND+({})".format(domanda_formattata_per_ricerca, risposta_formattata)
+            self.lista_singole_risposte_formattate_per_ricerca.append(base_url + fine_url)
 
         # Indirizzo della sola domanda
         self.domanda_url = base_url + "{}".format(domanda_formattata_per_ricerca)
         # Indirizzo per domanda + risposte
         self.risp_url = base_url + query_url
+
+        self.lista_di_tutti_gli_url = [self.domanda_url, self.risp_url]
+        self.lista_di_tutti_gli_url.extend(self.lista_singole_risposte_formattate_per_ricerca)
 
         #Punteggiatore([domanda_url, risp_url], risposta)

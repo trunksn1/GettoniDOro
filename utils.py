@@ -6,11 +6,13 @@ from cf import SCREEN_DIR, USER_AGENT
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
+from Guiatore import Guiatore
 from bs4 import BeautifulSoup
-import requests
+import requests, time
 import nltk
 from nltk import word_tokenize
 import pprint
+import PySimpleGUI as sg
 from nltk.corpus import stopwords
 
 PATH_SEPARATE = os.path.join(SCREEN_DIR, 'da_concatenare')
@@ -67,14 +69,17 @@ def diario_csv():
     immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
     with open(os.path.join(PATH_DOM_RSP, 'diario.csv'), 'w') as log:
         for n, immagine in enumerate(immagini_da_studiare):
-            if n == 1000:
+            if n == 10:
                 break
             try:
                 scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 print(immagine)
                 el = Elaboratore(immagine)
                 id = Identificatore(el.pezzi)
-                pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte)
+                win = Guiatore(id.risposte, id.lista_di_tutti_gli_url, drivers='')
+                pp = Punteggiatore(id.lista_di_tutti_gli_url, id.risposte,
+                                   win)  # [z.domanda_url, z.risp_url], z.risposte, win)
+                #pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte)
                 mess = '****** Domanda numero: {} ******'.format(n)
                 print(mess)
                 print(id.domanda)
@@ -93,19 +98,51 @@ def diario_csv():
                 continue
 
 
-def download_site(*url):
+
+def download_site(url):
+    print(url)
+    start = time.time()
     session = requests.Session()
+    risultato = []
     with session.get(url, headers=USER_AGENT) as r:
-        print(f"Read {len(r.content)} from {url}")
+        #print(f"Read {len(r.content)} from {url}")
         r.raise_for_status()
-        print(r)
+        #print(r)
         html_doc = r.text
         soup = BeautifulSoup(html_doc, 'html.parser')
         #print(soup)
         #risultati_google = soup.select('.bkWMgd .st')
         for g in soup.find_all(class_='g'):
-            print(g.text)
-            print('-----')
+            r = g.find(class_='ellip')
+            st = g.find('span', attrs={'class': 'st'})
+            superfluo = g.find(class_='JolIg')
+            if superfluo:
+                continue
+
+            if not st or not r:
+                #risultato.append(g.text)
+                s = g.find('div', attrs={'class': 'Z0LcW'})
+                if not s:
+                    s = g.find('span', attrs={'class': 'e24Kjd'})
+                    if not s:
+                        continue
+                stringa = s.text
+            if st and r:
+                tit = r.text
+                corp = st.text
+                stringa = tit + '\n' + corp
+
+            print(stringa)
+            stringa = '\n--> '.join(stringa.split('...'))
+
+            risultato.append(stringa)
+
+
+            #print('-----')
+        dur = time.time() - start
+        print(dur)
+        print()
+        return risultato
         """    
         #TODO: questo funziona ma non vede il primo box che compare in alto come nel caso del capoluogo della calabria
         risultati_google = soup.find_all('div', attrs={'class':'bkWMgd'})
@@ -120,6 +157,39 @@ def download_site(*url):
         #print(len(risultati_google))
         # TODO qui
         #exit()
+
+def creatore_gui(dati):
+    # TODO: il programma si blocca quando mostra la GUI, bisogna sfruttrare i thread
+    sg.ChangeLookAndFeel('GreenTan')
+    layout = []
+    if len(dati) % 2:
+        dati.append('')
+    lungh_lista = len(dati)//2
+    print(lungh_lista//2)
+    for n, dato in enumerate(dati):
+        print (n)
+        layout.append(
+
+                [sg.Multiline(dato, size=(50, 4)), sg.Multiline(dati[n+lungh_lista], size=(50, 4))]
+            )
+
+        if n == (lungh_lista-1):
+            break
+    pprint.pprint(layout)
+    window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True, keep_on_top=True).Layout(layout)
+
+    start = time.time()
+    browser_mostrato = False
+    while True:
+        dur = time.time() - start
+        # Read lancia un event loop, attraverso il parametro timeout ogni X millisecondi
+        # viene restituito il contenuto del parametro timeout_key
+        event, _ = window.Read(timeout=1000)
+        print(dur)
+        if event == 'F9:120' or event == 'Exit' or event is None:# or (dur >= 10):
+            print('Tempo scaduto: ', dur)
+            break
+    window.Close()
 
 
 def nltk_prova():
@@ -190,17 +260,18 @@ def trova_risposta(query, lista_risposte):
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
-    #diario_csv()
+    diario_csv()
     #nltk_prova()
     #scrape()
     #trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
     #               ['revolver', 'film', 'banca'])
-    url = [
+    urls = [
         'https://www.google.com/search?q=a+cosa+corrisponde+sigla+usa&oq=a+cosa+corrisponde+sigla+usa',
         'https://www.google.com/search?q=capoluogo+della+calabria',
         'https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
         'https://www.google.com/search?q=chi+è+il+ministro+degli+affari+esteri+europeo',
 
         ]
-
-    download_site(url)
+    #for url in urls:
+    ris = download_site(urls[0])
+    creatore_gui(ris)

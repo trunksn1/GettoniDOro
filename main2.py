@@ -19,7 +19,7 @@ while True:
 
     y = Elaboratore(screen_grabber.screenshot_name)
     z = Identificatore(y.pezzi)
-    win = Guiatore(z.risposte, [z.domanda_url, z.risp_url], drivers)
-    pp = Punteggiatore([z.domanda_url, z.risp_url], z.risposte, win)
+    win = Guiatore(z.risposte, z.lista_di_tutti_gli_url, drivers)  #[z.domanda_url, z.risp_url], drivers)
+    pp = Punteggiatore(z.lista_di_tutti_gli_url, z.risposte, win)  #[z.domanda_url, z.risp_url], z.risposte, win)
 
 

@@ -19,7 +19,10 @@ class Guiatore():
         # -- Start worker threads, one runs twice as often as the other
         threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[0], '_d_RX_',), daemon=True).start()
         threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[1], '_dr_RX_',), daemon=True).start()
-        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[2], '_TOT_RX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[2], '_d+1rX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[3], '_d+1rX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[4], '_d+1rX_',), daemon=True).start()
+        threading.Thread(target=self.aggiornatore_guiqueue__key_punteggio, args=(gui_queue, punteggi[-1], '_TOT_RX_',), daemon=True).start()
         # -- Start the GUI passing in the Queue --
         dict_dati_per_gui = self.queue_to_dict(gui_queue)
         self.creatore_gui(dict_dati_per_gui)
@@ -48,19 +51,25 @@ class Guiatore():
         sg.ChangeLookAndFeel('GreenTan')
 
         layout = [
-            [sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD'), sg.Text('+Risp'), sg.Text('TOT')],
+            [sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD'), sg.Text('+Risp'), sg.Text('TOT'), sg.Text('||'), sg.Text('D+1Risposta')],
             [sg.Text(self.lista_risposte[0], size=(15, 1)),
              sg.Text(dati['_d_R1_'], key='_d_R1_', justification='right', size=(3, 1)),
              sg.Text(dati['_dr_R1_'], key='_dr_R1_', justification='right', size=(3, 1)),
-             sg.Text(dati['_TOT_R1_'], key='_TOT_R1_', justification='right', size=(3, 1))],
+             sg.Text(dati['_TOT_R1_'], key='_TOT_R1_', justification='right', size=(3, 1), text_color='red', background_color='black'),
+             sg.Text('||'),
+             sg.Text(dati['_d+1r1_'], key='_d+1r1_', justification='right', size=(3, 1))],
             [sg.Text(self.lista_risposte[1], size=(15, 1)),
              sg.Text(dati['_d_R2_'], key='_d_R2_', justification='right', size=(3, 1)),
              sg.Text(dati['_dr_R2_'], key='_dr_R2_', justification='right', size=(3, 1)),
-             sg.Text(dati['_TOT_R2_'], key='_TOT_R2_', justification='right', size=(3, 1))],
+             sg.Text(dati['_TOT_R2_'], key='_TOT_R2_', justification='right', size=(3, 1), text_color='red', background_color='black'),
+             sg.Text('||'),
+             sg.Text(dati['_d+1r2_'], key='_d+1r2_', justification='right', size=(3, 1))],
             [sg.Text(self.lista_risposte[2], size=(15, 1)),
              sg.Text(dati['_d_R3_'], key='_d_R3_', justification='right', size=(3, 1)),
              sg.Text(dati['_dr_R3_'], key='_dr_R3_', justification='right', size=(3, 1)),
-             sg.Text(dati['_TOT_R3_'], key='_TOT_R3_', justification='right', size=(3, 1))],
+             sg.Text(dati['_TOT_R3_'], key='_TOT_R3_', justification='right', size=(3, 1), text_color='red', background_color='black'),
+             sg.Text('||'),
+             sg.Text(dati['_d+1r3_'], key='_d+1r3_', justification='right', size=(3, 1))],
             [sg.Exit()]
         ]
 

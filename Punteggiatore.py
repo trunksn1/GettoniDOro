@@ -13,12 +13,14 @@ class Punteggiatore():
         self.thread_local = threading.local()
         self.lista_url = urls
         self.lista_risposte = lista_risposte
+
         self.download_all_sites(urls)
         self.punteggi.append(self.punteggio_totale)
         #print("nel ponteggiatore: \n")
         print(self.punteggi[0])
         print(self.punteggi[1])
-        print(self.punteggi[2])
+        print(self.punteggi[-1])    # punteggio totale
+
 
         # TODO CANCELLA/COMMENTA STA LINEA ALTRIMENTI IL PROGRAMMA TERMINA!
         Test = False
