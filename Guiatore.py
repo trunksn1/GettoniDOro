@@ -8,10 +8,11 @@ driver1 = ''
 driver2 = ''
 
 class Guiatore():
-    def __init__(self, lista_risposte, urls, drivers):
+    def __init__(self, lista_risposte, urls, drivers, risultati_google_per_gui):
         self.lista_risposte = lista_risposte
         self.urls = urls
         self.drivers = drivers
+        self.risultati = risultati_google_per_gui
 
     def avvia_aggiornatori(self, punteggi):
         # -- Create a Queue to communicate with GUI --
@@ -42,6 +43,36 @@ class Guiatore():
             if message:
                 key_punteggio[message[0]] = message[1]
         return key_punteggio
+
+    def crea_layout_per_gui(self, dati):
+        layout = [[sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD'), sg.Text('+Risp'), sg.Text('TOT')]]
+
+        for n, risp in enumerate(self.lista_risposte):
+            layout.append(
+                [sg.Text(risp, size=(15, 1)),
+                 sg.Text(dati[0][risp]['_d_R{}_'.format(n+1)], key='_d_R_', justification='right', size=(3, 1)),
+                 sg.Text(dati[1][risp]['_dr_R{}_'.format(n+1)], key='_dr_R_', justification='right', size=(3, 1)),
+                 sg.Text(dati[0][risp]['_d_R{}_'.format(n+1)] + dati[1][risp]['_dr_R{}_'.format(n+1)], key='_TOT_R_', justification='right', size=(3, 1))]
+            )
+
+        window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True,
+                           return_keyboard_events=True, keep_on_top=True).Layout(layout)
+
+        start = time.time()
+        browser_mostrato = False
+        while True:
+            dur = time.time() - start
+
+            # Read lancia un event loop, attraverso il parametro timeout ogni X millisecondi
+            # viene restituito il contenuto del parametro timeout_key
+            event, _ = window.Read(
+                timeout=1000)  # , timeout_key=self.esecutori_browser(self.drivers, self.urls[0], self.urls[1])) #timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
+
+            if event == 'F9:120' or event == 'Exit' or (dur >= 10):
+                print('Tempo scaduto: ', dur)
+                break
+
+        window.Close()
 
     def creatore_gui(self, dati):
         # TODO: il programma si blocca quando mostra la GUI, bisogna sfruttrare i thread

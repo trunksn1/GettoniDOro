@@ -19,7 +19,6 @@ while True:
 
     y = Elaboratore(screen_grabber.screenshot_name)
     z = Identificatore(y.pezzi)
-    win = Guiatore(z.risposte, [z.domanda_url, z.risp_url], drivers)
-    pp = Punteggiatore([z.domanda_url, z.risp_url], z.risposte, win)
-
-
+    pp = Punteggiatore([z.domanda_url, z.risp_url], z.risposte)
+    win = Guiatore(z.risposte, [z.domanda_url, z.risp_url], drivers, pp.risultati_soup_google)
+    win.crea_layout_per_gui(pp.dizionario_di_risposte_e_punteggi)

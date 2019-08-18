@@ -6,11 +6,13 @@ from cf import SCREEN_DIR, USER_AGENT
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
+from Guiatore import Guiatore
 from bs4 import BeautifulSoup
-import requests
+import requests, time
 import nltk
 from nltk import word_tokenize
 import pprint
+import PySimpleGUI as sg
 from nltk.corpus import stopwords
 
 PATH_SEPARATE = os.path.join(SCREEN_DIR, 'da_concatenare')
@@ -67,14 +69,18 @@ def diario_csv():
     immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
     with open(os.path.join(PATH_DOM_RSP, 'diario.csv'), 'w') as log:
         for n, immagine in enumerate(immagini_da_studiare):
-            if n == 1000:
+            if n == 10:
                 break
             try:
                 scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 print(immagine)
+                drivers = ''
                 el = Elaboratore(immagine)
                 id = Identificatore(el.pezzi)
                 pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte)
+                win = Guiatore(id.risposte, [id.domanda_url, id.risp_url], drivers, pp.risultati_soup_google)
+                win.crea_layout_per_gui(pp.dizionario_di_risposte_e_punteggi)
+                #pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte)
                 mess = '****** Domanda numero: {} ******'.format(n)
                 print(mess)
                 print(id.domanda)
@@ -93,33 +99,78 @@ def diario_csv():
                 continue
 
 
-def download_site(*url):
+
+def download_site(url):
+    print(url)
+    start = time.time()
     session = requests.Session()
+    risultato = []
     with session.get(url, headers=USER_AGENT) as r:
-        print(f"Read {len(r.content)} from {url}")
         r.raise_for_status()
-        print(r)
         html_doc = r.text
         soup = BeautifulSoup(html_doc, 'html.parser')
-        #print(soup)
-        #risultati_google = soup.select('.bkWMgd .st')
-        for g in soup.find_all(class_='g'):
-            print(g.text)
-            print('-----')
-        """    
-        #TODO: questo funziona ma non vede il primo box che compare in alto come nel caso del capoluogo della calabria
-        risultati_google = soup.find_all('div', attrs={'class':'bkWMgd'})
-        for r in risultati_google:
-            b = r.find_all('span', attrs={'class':'st'})
-            for x in b:
-                print(x.get_text())
-            #pprint.pprint(b)
-        """
 
-        #pprint.pprint(risultati_google)
-        #print(len(risultati_google))
-        # TODO qui
-        #exit()
+        # Tutti i risultati sono al di sotto di un elemento: class='g'
+        for g in soup.find_all(class_='g'):
+            # Adesso cerco diverse cose:
+            r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+            st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
+            superfluo = g.find(class_='JolIg')  # contiene cose inutili come il box 'People Also Search For ...'
+            if superfluo:
+                continue
+
+            # Quando hai i box dei risultati, sotto la classe 'g' non trovi invece le classi r o st
+            if not st or not r:
+                # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
+                s = g.find('div', attrs={'class': 'Z0LcW'})  # contiene il trafiletto per catanzaro (ma sotto ha un'altra classe) e la sinossi del film rocknrolla (direttamente)
+                if not s: # Bisogna capire se ci sono altre possibili classi che si possono aprire
+                    #tit = g.find('div', attrs={'class': 'JpTGae'})  #In alcune answer box questa classe contiene il titolo
+                    s = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
+                    if not s:
+                        continue
+                stringa =  s.text
+
+            if st and r:
+                tit = r.text
+                corp = st.text
+                stringa = tit + '\n' + corp
+
+            stringa = '\n--> '.join(stringa.split('...'))
+
+            risultato.append(stringa)
+        return risultato
+
+def creatore_gui(dati):
+    sg.ChangeLookAndFeel('GreenTan')
+    layout = []
+    if len(dati) % 2:
+        dati.append('')
+    lungh_lista = len(dati)//2
+    print(lungh_lista//2)
+    for n, dato in enumerate(dati):
+        print (n)
+        layout.append(
+
+                [sg.Multiline(dato, size=(50, 4))]) #, sg.Multiline(dati[n+lungh_lista], size=(50, 4))])
+
+
+        if n == 6: #(lungh_lista-1):
+            break
+    pprint.pprint(layout)
+    window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True, return_keyboard_events=True, keep_on_top=True).Layout(layout)
+
+    start = time.time()
+    browser_mostrato = False
+    while True:
+        dur = time.time() - start
+        # Read lancia un event loop, attraverso il parametro timeout ogni X millisecondi
+        # viene restituito il contenuto del parametro timeout_key
+        event, _ = window.Read(timeout=1000)
+        print(dur)
+        if event == 'F9:120' or event == 'Exit' or event is None:# or (dur >= 10):
+            print('Tempo scaduto: ', dur)
+            break
+    window.Close()
 
 
 def nltk_prova():
@@ -190,17 +241,22 @@ def trova_risposta(query, lista_risposte):
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
-    #diario_csv()
+    diario_csv()
     #nltk_prova()
     #scrape()
     #trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
     #               ['revolver', 'film', 'banca'])
-    url = [
+    urls = [
         'https://www.google.com/search?q=a+cosa+corrisponde+sigla+usa&oq=a+cosa+corrisponde+sigla+usa',
         'https://www.google.com/search?q=capoluogo+della+calabria',
         'https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
         'https://www.google.com/search?q=chi+è+il+ministro+degli+affari+esteri+europeo',
+        'https://www.google.com/search?&q=what+are+the+possible+box+in+a+google+search',
 
         ]
-
-    download_site(url)
+    ris = download_site(urls[-1])
+    creatore_gui(ris)
+    #for url in urls:
+    #    ris = download_site(url) #[0])
+    #    creatore_gui(ris)
+    #    time.sleep(6)
