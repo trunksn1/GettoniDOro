@@ -50,9 +50,9 @@ class Guiatore():
         for n, risp in enumerate(self.lista_risposte):
             layout.append(
                 [sg.Text(risp, size=(15, 1)),
-                 sg.Text(dati[0][risp]['_d_R{}_'.format(n+1)], key='_d_R_', justification='right', size=(3, 1)),
-                 sg.Text(dati[1][risp]['_dr_R{}_'.format(n+1)], key='_dr_R_', justification='right', size=(3, 1)),
-                 sg.Text(dati[0][risp]['_d_R{}_'.format(n+1)] + dati[1][risp]['_dr_R{}_'.format(n+1)], key='_TOT_R_', justification='right', size=(3, 1))]
+                 sg.Text(dati[risp]['_d_R{}_'.format(n+1)], key='_d_R{}_'.format(n+1), justification='right', size=(3, 1)),
+                 sg.Text(dati[risp]['_dr_R{}_'.format(n+1)], key='_dr_R{}_'.format(n+1), justification='right', size=(3, 1)),
+                 sg.Text(dati[risp]['_d_R{}_'.format(n+1)] + dati[risp]['_dr_R{}_'.format(n+1)], key='_TOT_R{}_'.format(n+1), justification='right', size=(3, 1))]
             )
 
         window = sg.Window('Risposte', default_element_size=(40, 1), grab_anywhere=True,

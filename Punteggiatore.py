@@ -16,7 +16,7 @@ class Punteggiatore():
         self.download_all_sites(urls)
         #self.punteggi.append(self.punteggio_totale)
         #print("nel ponteggiatore: \n")
-        pprint.pprint(self.dizionario_di_risposte_e_punteggi)
+        #pprint.pprint(self.dizionario_di_risposte_e_punteggi)
 
     def crea_dizionario_delle_risposte_e_punteggi(self):
         # crea un dizionario con 3 chiavi, ovvero le 3 risposte,
@@ -86,7 +86,7 @@ class Punteggiatore():
                 stringa = '\n--> '.join(stringa.split('...'))
 
                 risultato.append(stringa)
-            print(risultato)
+            #print(risultato)
             return risultato
 
     def download_all_sites(self, sites):
@@ -98,23 +98,24 @@ class Punteggiatore():
 
             #self.punteggi = list(executor.map(self.ottieni_punti, self.risultati_soup_google))
             self.chiama_ottieni_punti()
-            print('dizionario finale!')
-            print(list(self.dizionario_di_risposte_e_punteggi))
-            #exit()
-        #self.punteggio_totale = Counter(self.punteggi[0]) + Counter(self.punteggi[1])  # 0 è solo dom, 1 è dom + risp
-
 
     def chiama_ottieni_punti(self):
+        self.dizionario_di_risposte_e_key_punteggi = {}
+        self.ponte_risultati_risposte = {}
         key = ['_d_RX_', '_dr_RX_']
-        pprint.pprint(self.risultati_soup_google)
+        #pprint.pprint(self.risultati_soup_google)
         print(len(self.risultati_soup_google))
         #self.dizionario_di_risposte_e_punteggi = list(map(self.ottieni_punti_new, self.risultati_soup_google, key))
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            self.dizionario_di_risposte_e_punteggi = list(executor.map(self.ottieni_punti_new_per_executor, [
-                (self.risultati_soup_google[0], key[0]),
+            # self.dizionario_di_risposte_e_key_punteggi = list(executor.map(self.ottieni_punti_new_per_executor, [
+
+            list(executor.map(self.ottieni_punti_new_per_executor, [
+            (self.risultati_soup_google[0], key[0]),
                 (self.risultati_soup_google[1], key[1])
                 ]))
-        pprint.pprint(self.dizionario_di_risposte_e_punteggi)
+
+        pprint.pprint(self.ponte_risultati_risposte)
+        pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
 
 
     def ottieni_punti_new(self, risultati_google, key):
@@ -135,27 +136,40 @@ class Punteggiatore():
         # {Risp1 : {'keyDom' : x, 'keyDR' : x}, Risp2 : {'keyDom' : x, 'keyDR' : x}, Risp3 : {'keyDom' : x, 'keyDR' : x}}
         return punteggio
 
-
-
     def ottieni_punti_new_per_executor(self, risultati_google_e_key):
         # versione per gli executor
         # risultati_google_e_key[0]: corrisponde ai risultati_google
         # risultati_google_e_key[1]: corrisponde alle key che servono in seguito per la gui (formato simile a _D_RX_)
-        punteggio = {}
+        #punteggio = {}
+        #ponte_risultati_risposte = {}
         for n, risposta in enumerate(self.lista_risposte):
-            punteggio[risposta] = {} #defaultdict(int)
-            #Questo è l'arzigogolo per creare la stringa della key da usare nella gui
-            key = risultati_google_e_key[1][:-2] + str( n +1) + risultati_google_e_key[1][-1:]
+            #punteggio[risposta] = {}  # defaultdict(int)
+            # Questo è l'arzigogolo per creare la stringa della key da usare nella gui
+            key = risultati_google_e_key[1][:-2] + str(n + 1) + risultati_google_e_key[1][-1:]
+            #punteggio[risposta][key] = 0
 
-            punteggio[risposta][key] = 0
+            if risposta not in self.dizionario_di_risposte_e_key_punteggi:
+                self.dizionario_di_risposte_e_key_punteggi[risposta] = {}
+                self.dizionario_di_risposte_e_key_punteggi[risposta][key] = 0
+            else:
+                self.dizionario_di_risposte_e_key_punteggi[risposta].update({key: 0})
+
+            #punteggio[risposta]['trovato_in'] = []
             for risultato in risultati_google_e_key[0]:
                 if risposta.lower() in str(risultato).lower():
-                    punteggio[risposta][key] += 1
-        print('singolo puneggio: \n')
-        print(punteggio)
-        # Risultato è un dizionario fatto così:
-        # {Risp1 : {'keyDom' : x, 'keyDR' : x}, Risp2 : {'keyDom' : x, 'keyDR' : x}, Risp3 : {'keyDom' : x, 'keyDR' : x}}
-        return punteggio
+                    #punteggio[risposta][key] += 1
+                    self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
+                    if str(risultato) not in self.ponte_risultati_risposte:
+                        self.ponte_risultati_risposte[str(risultato)] = [risposta]
+                    else:
+                        self.ponte_risultati_risposte[str(risultato)].append(risposta)
+
+
+        # dizionario_di_risposte_e_key_punteggi è una lista che contiene un dizionario fatto così:
+        # [{Risp1 : {'keyDom' : x, 'keyD+R' : x }, Risp2 : { ... }]
+
+        # ponte_risultati_risposte è invece un dizionario che in cui le key sono asociate a delle liste
+        # {Risultato_google che ha una risposta all'interno : [risposta (,eventuale_altra_risposta)]}
 
 
     def ottieni_punti(self, risultati_google):
