@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 import cv2, os, glob
 import csv
 import numpy as np

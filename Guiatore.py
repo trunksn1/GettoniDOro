@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 import PySimpleGUI as sg
 import time, queue, threading
 from selenium import webdriver
