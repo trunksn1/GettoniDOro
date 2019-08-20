@@ -16,6 +16,7 @@ class Punteggiatore():
         self.lista_risposte = lista_risposte
 
         self.download_all_sites(urls)
+        self.chiama_ottieni_punti()
         self.scrivo_html_con_risultati_e_l_apro()
         #self.punteggi.append(self.punteggio_totale)
         #print("nel ponteggiatore: \n")
@@ -49,6 +50,7 @@ class Punteggiatore():
 
     def download_site_preserva_html(self, url):
         # Tenta di guardare anche nei box di google
+
 
         print('PRESERVA')
         print(url)
@@ -89,6 +91,7 @@ class Punteggiatore():
 
                 risultato.append(stringa)
             print(risultato)
+            print('FINE PRESERVA')
             return risultato
 
 
@@ -138,15 +141,12 @@ class Punteggiatore():
             return risultato
 
     def download_all_sites(self, sites):
-        print('**********DOWNLOAD ALL')
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             # otterrai una lista contenente due liste, nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
-            self.risultati_soup_google = list(executor.map(self.download_site_preserva_html, sites))
+            self.risultati_soup_google = list(executor.map(self.download_site_preserva_html, sites, timeout=3000))
 
             #self.punteggi = list(executor.map(self.ottieni_punti, self.risultati_soup_google))
-            self.chiama_ottieni_punti()
 
     def chiama_ottieni_punti(self):
         print('INIZIO CHIAMA PNTI')
@@ -156,7 +156,7 @@ class Punteggiatore():
         #pprint.pprint(self.risultati_soup_google)
         print(len(self.risultati_soup_google))
         #self.dizionario_di_risposte_e_punteggi = list(map(self.ottieni_punti_new, self.risultati_soup_google, key))
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             # self.dizionario_di_risposte_e_key_punteggi = list(executor.map(self.ottieni_punti_new_per_executor, [
 
             #self.ponte_risultati_risposte, \
@@ -164,11 +164,12 @@ class Punteggiatore():
             (self.risultati_soup_google[0], key[0]),
                 (self.risultati_soup_google[1], key[1])
                 ]))
+
         print('FINE CHIAMA PNTI')
-        pprint.pprint(self.risultati_google_evidenziati)
-        print(len(self.risultati_google_evidenziati))
-        pprint.pprint(self.ponte_risultati_risposte)
-        pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
+        #pprint.pprint(self.risultati_google_evidenziati)
+        #print(len(self.risultati_google_evidenziati))
+        #pprint.pprint(self.ponte_risultati_risposte)
+        #pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
 
 
     def ottieni_punti_new(self, risultati_google, key):

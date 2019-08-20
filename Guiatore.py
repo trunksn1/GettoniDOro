@@ -46,6 +46,11 @@ class Guiatore():
         return key_punteggio
 
     def crea_layout_per_gui(self, dati):
+        assert threading.current_thread() is threading.main_thread()
+        print('Thread attivi: ', end='')
+        print(threading.active_count())
+        print(threading.enumerate())
+
         layout = [[sg.Text('RISPOSTE', size=(15, 1)), sg.Text('SoloD'), sg.Text('+Risp'), sg.Text('TOT')]]
 
         for n, risp in enumerate(self.lista_risposte):
@@ -69,7 +74,7 @@ class Guiatore():
             event, _ = window.Read(
                 timeout=1000)  # , timeout_key=self.esecutori_browser(self.drivers, self.urls[0], self.urls[1])) #timeout_key=self.ottieni_drivers(coordinate_drivers_browser)) #timeout_key=self.esecutori_browser(coordinate_drivers_browser, self.urls[0], self.urls[1]))
 
-            if event == 'F9:120' or event == 'Exit' or (dur >= 10):
+            if event == 'F9:120' or event == 'Exit' or (dur >= 5):
                 print('Tempo scaduto: ', dur)
                 break
 

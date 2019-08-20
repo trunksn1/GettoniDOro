@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import requests, time
 import nltk
 from nltk import word_tokenize
-import pprint
+import pprint, threading
 import PySimpleGUI as sg
 from nltk.corpus import stopwords
 
@@ -79,6 +79,8 @@ def diario_csv():
                 el = Elaboratore(immagine)
                 id = Identificatore(el.pezzi)
                 pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte)
+                print('Thread attivi: ', end='')
+                print(threading.active_count())
                 win = Guiatore(id.risposte, [id.domanda_url, id.risp_url], drivers, pp.risultati_soup_google)
                 #win.crea_layout_per_gui(pp.dizionario_di_risposte_e_punteggi)
                 win.crea_layout_per_gui(pp.dizionario_di_risposte_e_key_punteggi)
