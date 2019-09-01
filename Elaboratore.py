@@ -79,9 +79,9 @@ class Elaboratore():
         print("punto y = ", y)
         print("punto x =", x)
 
-        self.cord_r1 = [100, y_risposte[5]+100, x-100, y_risposte[4]-100]
-        self.cord_r2 = [100, y_risposte[3]+100, x-100, y_risposte[2]-100]
-        self.cord_r3 = [100, y_risposte[1]+100, x-100, y_risposte[0]-100]
+        self.cord_r1 = [120, y_risposte[5]+100, x-130, y_risposte[4]-100]
+        self.cord_r2 = [120, y_risposte[3]+100, x-130, y_risposte[2]-100]
+        self.cord_r3 = [120, y_risposte[1]+100, x-130, y_risposte[0]-100]
         self.cord_d = [0, 0, x, y_risposte[5]]
 
         self.cords = [self.cord_d] + [self.cord_r1] + [self.cord_r2] + [self.cord_r3]
