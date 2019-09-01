@@ -3,7 +3,7 @@ from ScreenGrabber import ScreenGrab
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
-from Guiatore import Guiatore
+#from Guiatore import Guiatore
 from helpers import ottieni_drivers
 
 
