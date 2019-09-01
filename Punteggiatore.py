@@ -30,8 +30,6 @@ class Punteggiatore():
 
     def download_site_preserva_html(self, url):
         # Tenta di guardare anche nei box di google
-        print('PRESERVA')
-        print(url)
         session = requests.Session()
         risultato = []
         with session.get(url, headers=USER_AGENT) as r:
@@ -68,10 +66,7 @@ class Punteggiatore():
                 #stringa = '<br>'.join(stringa.split('...'))
 
                 risultato.append(stringa)
-            print(risultato)
-            print('FINE PRESERVA')
             return risultato
-
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
@@ -108,12 +103,15 @@ class Punteggiatore():
                 self.dizionario_di_risposte_e_key_punteggi[risposta].update({key: 0})
 
             for risultato in risultati_google_e_key[0]:
-                if risposta.lower() in str(risultato).lower():
+                index_risultato = str(risultato).lower().find(risposta.lower())
+                if index_risultato >= 0:    #se il metodo find non trova niente restiuisce -1
+                #if risposta.lower() in str(risultato).lower():
                     # 1)Se trovo una isposta nel risultat la evidenzio nell'HTML
                     # Se non attacco la lista con queste operazioni non modifico la lista originaria passata alla chiamata
                     # della funzione.
                     risultati_google_e_key[0].remove(risultato)
-                    risultato = str(risultato).lower().replace(risposta.lower(), '<b>' + risposta.lower() + '</b>')
+                    risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato+len(risposta):]
+                    #risultato = str(risultato).lower().replace(risposta.lower(), '<b>' + risposta.lower() + '</b>')
                     risultati_google_e_key[0].insert(0, risultato)
                     # 2) Aggiorno il punteggio
                     self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
