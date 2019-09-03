@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
 from bs4 import BeautifulSoup
 import requests
-from cf import USER_AGENT
+from cf import USER_AGENT, TEMPLATE_DIR
 import concurrent.futures
 import queue, threading
 import pprint
@@ -18,7 +18,9 @@ class Punteggiatore():
         self.download_all_sites(urls)
         self.chiama_ottieni_punti()
         #self.scrivo_html_con_risultati_e_l_apro()
+        print(TEMPLATE_DIR)
         self.rendo_template_html()
+
 
     def crea_dizionario_delle_risposte_e_punteggi(self):
         # crea un dizionario con 3 chiavi, ovvero le 3 risposte,
@@ -102,6 +104,7 @@ class Punteggiatore():
             else:
                 self.dizionario_di_risposte_e_key_punteggi[risposta].update({key: 0})
 
+            int_nuova_posizione = 0 # questo valore serve per mantenere la posizione delle ricerche
             for risultato in risultati_google_e_key[0]:
                 index_risultato = str(risultato).lower().find(risposta.lower())
                 if index_risultato >= 0:    #se il metodo find non trova niente restiuisce -1
@@ -112,7 +115,8 @@ class Punteggiatore():
                     risultati_google_e_key[0].remove(risultato)
                     risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato+len(risposta):]
                     #risultato = str(risultato).lower().replace(risposta.lower(), '<b>' + risposta.lower() + '</b>')
-                    risultati_google_e_key[0].insert(0, risultato)
+                    risultati_google_e_key[0].insert(int_nuova_posizione, risultato)
+                    int_nuova_posizione += 1 #in questo modo il risultato viene posto il più in alto possibile, senza perdere posizione rispetto agli altri risultati
                     # 2) Aggiorno il punteggio
                     self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
 
@@ -174,10 +178,9 @@ class Punteggiatore():
         webbrowser.open(os.path.join('file://', os.getcwd(), 'domanda.html'))
 
     def rendo_template_html(self):
-        print('Ciao Mamma')
         pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
         pprint.pprint(self.risultati_soup_google)
-        file_loader = FileSystemLoader('templates')
+        file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('base.html')
 
