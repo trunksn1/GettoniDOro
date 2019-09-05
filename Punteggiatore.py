@@ -182,7 +182,7 @@ class Punteggiatore():
         pprint.pprint(self.risultati_soup_google)
         file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
-        template = env.get_template('base.html')
+        template = env.get_template('base2.html')
 
         with open('domanda.html', 'w', encoding="utf-8") as pisstaking:
             pisstaking.write(

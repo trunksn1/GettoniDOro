@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="static\main.css">
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <h3><font face="verdana" color="green">{{domanda}}<br></font></h3>
+        <table class="table">
+            <tr>
+            <th scope="col">#</th>
+                <th scope="col">SoloD</th>
+                <th scope="col">Dom+R</th>
+                <th scope="col"><b>TOTALE</b></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for rsp in lista_risposte %}
+            <tr>
+                <th scope="row">{{rsp}}</th>
+                <td>{{diz_risposte_e_key_punteggi[rsp]['_d_R_']}}</td>
+                <td>{{diz_risposte_e_key_punteggi[rsp]['_dr_R_']}}</td>
+                <td>{{diz_risposte_e_key_punteggi[rsp]['_d_R_'] + diz_risposte_e_key_punteggi[rsp]['_dr_R_']}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col">
+                    <b>Domanda</b>
+                </div>
+
+                <div class="col">
+                    <b>Domanda & Risposte</b>
+                </div>
+            </div>
+            {% for n in range(11) %}
+            <div class="row">
+                <div class="col">
+                    <p>{{risultati_soup_google[0][n]}}</p>
+                </div>
+                <div class="col">
+                    <p>{{risultati_soup_google[1][n]}}</p>
+                </div>
+            </div>
+            {% endfor %}
+
+
+        </div>
+    </body>
+</html>
+
+
+
