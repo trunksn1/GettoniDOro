@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
 from bs4 import BeautifulSoup
 import requests
-from cf import USER_AGENT, TEMPLATE_DIR
+from cf import USER_AGENT, TEMPLATE_DIR, CSS_DIR
 import concurrent.futures
 import queue, threading
 import pprint
@@ -183,13 +183,15 @@ class Punteggiatore():
         file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('base2.html')
+        print(template)
 
         with open('domanda.html', 'w', encoding="utf-8") as pisstaking:
             pisstaking.write(
                 template.render(domanda=self.domanda,
                                 lista_risposte=self.lista_risposte,
                                 diz_risposte_e_key_punteggi=self.dizionario_di_risposte_e_key_punteggi,
-                                risultati_soup_google=self.risultati_soup_google))
+                                risultati_soup_google=self.risultati_soup_google,
+                                path_to_css = CSS_DIR))
 
         webbrowser.open('domanda.html')
 
