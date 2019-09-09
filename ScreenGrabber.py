@@ -68,14 +68,12 @@ class ScreenGrab():
 
         # self.cords all'inizio è una lista il cui unico elemento è una tupla con le coordinate del punto cliccato
         #inizio_domande = list(self.cords[0])
-        print('quante coordinate? ', len(self.cords))
         if len(self.cords) < 4:
             inizio_domande = self.cords
             fine_risposte = [self.cords[0] + x, self.cords[1] + y]
             self.cords = inizio_domande + fine_risposte
 
     def screen_grab(self, nome=''):
-        print('Prima del casino: ', self.cords)
         box = (self.cords)
         if not nome:
             nome = 'full_snap__'

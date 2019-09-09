@@ -8,14 +8,12 @@ import pytesseract
 from Punteggiatore import Punteggiatore
 import threading
 
-driver = ''
-drivers = None
+
+
 
 class Identificatore():
     def __init__(self, lista_files):
-        global driver
         self.lista_files = lista_files
-        self.driver = driver
         self.risposte = []
 
         self.thread_local = threading.local()
@@ -46,7 +44,6 @@ class Identificatore():
         return text
 
     def prepara_url_da_ricercare(self, domanda, risposta):
-        global driver
         domanda_formattata_per_ricerca = "+".join(domanda.split())
         if type(risposta) == list:
             r = []

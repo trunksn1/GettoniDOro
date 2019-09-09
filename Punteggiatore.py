@@ -17,7 +17,6 @@ class Punteggiatore():
 
         self.download_all_sites(urls)
         self.chiama_ottieni_punti()
-        #self.scrivo_html_con_risultati_e_l_apro()
         print(TEMPLATE_DIR)
         self.rendo_template_html()
 
@@ -79,9 +78,7 @@ class Punteggiatore():
 
     def chiama_ottieni_punti(self):
         self.dizionario_di_risposte_e_key_punteggi = {}
-        #key = ['_d_RX_', '_dr_RX_']
         key = ['_d_R_', '_dr_R_']
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             self.risultati_google_evidenziati = list(executor.map(self.ottieni_punti_new_per_executor, [
             (self.risultati_soup_google[0], key[0]),
@@ -128,55 +125,6 @@ class Punteggiatore():
         # {Risultato_google che ha una risposta all'interno : [risposta (,eventuale_altra_risposta)]}
         # non volendo più usare la gui questo dizionario mi è inutile. conservo lo scritto a futura memoria.
 
-    def scrivo_html_con_risultati_e_l_apro(self):
-        # Con questa funzione scrivo io la pagina HTML,
-        # a differenza della gui, posso evidenziare nei risultati eventuali risposte!
-        # ed è una rottura in meno di cazzo
-        with open('domanda.html', 'w', encoding="utf-8") as pisstaking:
-            pisstaking.write('<head><link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"/></head>')
-            pisstaking.write('<font face="verdana" color="green">' + self.domanda +'<br></font>')
-            pisstaking.write('<table class="table"><tr>')
-            pisstaking.write('<th scope="col">#</th><th scope="col">SoloD</th><th scope="col">Dom+R</th><th scope="col"><b>TOTALE</b></th></tr></thead>')
-            pisstaking.write('<tbody>')
-            for n, rsp in enumerate(self.lista_risposte):
-                pisstaking.write('<tr><th scope="row">{}</th>'.format(rsp))
-                pisstaking.write('<td>{}</td>'.format(self.dizionario_di_risposte_e_key_punteggi[rsp]['_d_R{}_'.format(n+1)]))
-                pisstaking.write('<td>{}</td>'.format(self.dizionario_di_risposte_e_key_punteggi[rsp]['_dr_R{}_'.format(n+1)]))
-                pisstaking.write('<td>{}</td>'.format(self.dizionario_di_risposte_e_key_punteggi[rsp]['_d_R{}_'.format(n+1)] + self.dizionario_di_risposte_e_key_punteggi[rsp]['_dr_R{}_'.format(n+1)]))
-                pisstaking.write('</tr>')
-            pisstaking.write('</tbody></table>')
-            #for n, ris in enumerate(self.risultati_soup_google[0]):
-            for n in range(10): # n è pari a dieci, perchè sono dieci i risultati mostrati da google!
-                pisstaking.write('<div class="container-fluid">')
-                pisstaking.write('<div class="row">')
-                pisstaking.write('<div class="col">')
-                if n == 0:
-                    pisstaking.write('<b>' + 'Domanda' + '</b>')
-                pisstaking.write('<br>')
-                pisstaking.write('----------------')
-                pisstaking.write('<br>')
-                try:
-                    pisstaking.write(self.risultati_soup_google[0][n])
-                except IndexError:
-                    print('Non ci sono risultati da mostrare per la sola domanda!')
-                    pisstaking.write('<br>')
-
-                pisstaking.write('</div>')
-                pisstaking.write('<div class="col">')
-                if n == 0:
-                    pisstaking.write('<b>' + 'Domanda & Risposte' + '</b>')
-                pisstaking.write('<br>')
-                pisstaking.write('----------------')
-                pisstaking.write('<br>')
-                try:
-                    pisstaking.write(self.risultati_soup_google[1][n])
-                except IndexError:
-                    print('Non ci sono risultati da mostrare per domanda e risposte!')
-                    pisstaking.write('<br>')
-                pisstaking.write('</div></div></div>')
-
-        webbrowser.open(os.path.join('file://', os.getcwd(), 'domanda.html'))
-
     def rendo_template_html(self):
         pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
         pprint.pprint(self.risultati_soup_google)
@@ -191,7 +139,7 @@ class Punteggiatore():
                                 lista_risposte=self.lista_risposte,
                                 diz_risposte_e_key_punteggi=self.dizionario_di_risposte_e_key_punteggi,
                                 risultati_soup_google=self.risultati_soup_google,
-                                path_to_css = CSS_DIR))
+                                path_to_css=CSS_DIR))
 
         webbrowser.open('domanda.html')
 
