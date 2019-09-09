@@ -3,12 +3,9 @@ try:
     from PIL import ImageGrab, Image
 except ImportError:
     import Image
-from cf import PATH_INSTALLAZIONE_TESSERACT
+from install_settings import PATH_INSTALLAZIONE_TESSERACT
 import pytesseract
-from Punteggiatore import Punteggiatore
 import threading
-
-
 
 
 class Identificatore():

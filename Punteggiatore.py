@@ -3,9 +3,9 @@ from bs4 import BeautifulSoup
 import requests
 from cf import USER_AGENT, TEMPLATE_DIR, CSS_DIR
 import concurrent.futures
-import queue, threading
+import threading
 import pprint
-import webbrowser,os
+import webbrowser
 from jinja2 import Environment, FileSystemLoader
 
 class Punteggiatore():

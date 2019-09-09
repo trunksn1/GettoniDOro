@@ -12,13 +12,11 @@ from splitanswers import splitanswers
 
 class Elaboratore():
     """Oggetto che prende lo screenshot e lo rielabora ottenendo alla fine 4 diverse immagini in bianco e nero 1 è la domandale altre tre sono le singole risposte"""
-    def __init__(self, screenshot_name):#, coords):
+    def __init__(self, screenshot_name):
         self.screenshot_name = screenshot_name
-        #self.cords = coords
         self.perfeziona_immagine()
         print('ELABORIAMO:')
         print(self.screenshot_name)
-        #print(self.img)
         self.get_all_cords()
         self.salva_i_pezzi()
 
