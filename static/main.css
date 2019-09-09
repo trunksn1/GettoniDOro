@@ -2,3 +2,6 @@ div.row {
     border: 1px solid;
 }
 
+em {
+    background-color: #FFFF00;
+}
