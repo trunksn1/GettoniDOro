@@ -43,9 +43,6 @@ class Punteggiatore():
                 # Adesso cerco diverse cose:
                 r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
                 st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
-                superfluo = g.find(class_='JolIg')  # contiene cose inutili come il box 'People Also Search For ...'
-                if superfluo:
-                    continue
 
                 if st and r:
                     stringa = str(r) + '<br>' + str(st)
@@ -63,8 +60,6 @@ class Punteggiatore():
                             continue
                         else:
                             stringa = str(s)
-
-                #stringa = '<br>'.join(stringa.split('...'))
 
                 risultato.append(stringa)
             return risultato
@@ -126,12 +121,12 @@ class Punteggiatore():
         # non volendo più usare la gui questo dizionario mi è inutile. conservo lo scritto a futura memoria.
 
     def rendo_template_html(self):
-        pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
-        pprint.pprint(self.risultati_soup_google)
+        #pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
+        #pprint.pprint(self.risultati_soup_google)
         file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('base2.html')
-        print(template)
+        #print(template)
 
         with open('domanda.html', 'w', encoding="utf-8") as pisstaking:
             pisstaking.write(

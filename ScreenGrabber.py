@@ -9,6 +9,7 @@ from pynput.keyboard import Key, Listener
 from cf import x_finale, y_finale, SCREEN_DIR, RELABOR_DIR
 
 
+
 class ScreenGrab():
     """Oggetto deputato alla cattura dello schermo"""
     def __init__(self):
@@ -21,12 +22,14 @@ class ScreenGrab():
         if not os.path.isdir(RELABOR_DIR):
             os.makedirs(RELABOR_DIR)
 
+
     def start_screen_grab(self):
         print('Premi F6 per indicare dove inizia la schermata da catturare\n'
               'Premi F9 per riutilizzare le coordinate precedenti')
         with Listener(on_press=self.on_press) as listener:
             listener.join()
         return self.cords
+
 
     def on_press(self, key):
         print('{0} pressed'.format(key))
