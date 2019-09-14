@@ -15,11 +15,18 @@ class Punteggiatore():
         self.domanda = domanda
         self.lista_risposte = lista_risposte
 
+        #self.download_all_sites(urls)
+        #self.chiama_ottieni_punti()
+        #print(TEMPLATE_DIR)
+        #self.rendo_template_html()
+
+        ### Introdotottu il 14/09 per miglioare efficienza
+        self.dizionario_di_risposte_e_key_punteggi = {}
+        self.lista_risp_riscontri = []
+        self.lista_risp_senza_riscontri = []
         self.download_all_sites(urls)
-        self.chiama_ottieni_punti()
         print(TEMPLATE_DIR)
         self.rendo_template_html()
-
 
     def crea_dizionario_delle_risposte_e_punteggi(self):
         # crea un dizionario con 3 chiavi, ovvero le 3 risposte,
@@ -61,23 +68,25 @@ class Punteggiatore():
                         else:
                             stringa = str(s)
 
-                risultato.append(stringa)
-            return risultato
+                self.chiama_ottieni_punti_da_singolo_risultato(stringa, url)
+            return self.lista_risp_riscontri + self.lista_risp_senza_riscontri
+
+                #risultato.append(stringa)
+            #return risultato
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             # otterrai una lista contenente due liste, nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
             self.risultati_soup_google = list(executor.map(self.download_site_preserva_html, sites, timeout=3000))
-
+        #print(self.dizionario_di_risposte_e_key_punteggi)
 
     def chiama_ottieni_punti(self):
         self.dizionario_di_risposte_e_key_punteggi = {}
         key = ['_d_R_', '_dr_R_']
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             self.risultati_google_evidenziati = list(executor.map(self.ottieni_punti_new_per_executor, [
-            (self.risultati_soup_google[0], key[0]),
-                (self.risultati_soup_google[1], key[1])
+            (self.risultati_soup_google[0], key[0]), (self.risultati_soup_google[1], key[1])
                 ]))
 
     def ottieni_punti_new_per_executor(self, risultati_google_e_key):
@@ -85,7 +94,8 @@ class Punteggiatore():
         # risultati_google_e_key[0]: corrisponde ai risultati_google
         # risultati_google_e_key[1]: corrisponde alle key che servono in seguito per la gui (formato simile a _D_RX_)
 
-        for n, risposta in enumerate(self.lista_risposte):
+        #for n, risposta in enumerate(self.lista_risposte):
+        for risposta in self.lista_risposte:
             # Questo è l'arzigogolo per creare la stringa della key da usare nella gui
             #key = risultati_google_e_key[1][:-2] + str(n + 1) + risultati_google_e_key[1][-1:]
             key = risultati_google_e_key[1]
@@ -120,9 +130,49 @@ class Punteggiatore():
         # {Risultato_google che ha una risposta all'interno : [risposta (,eventuale_altra_risposta)]}
         # non volendo più usare la gui questo dizionario mi è inutile. conservo lo scritto a futura memoria.
 
+    def chiama_ottieni_punti_da_singolo_risultato(self, ris, url):
+        print('OTTENGO PUNTI ADESSO DAL RISULTATO')
+        print(url)
+        print(ris)
+        self.punti_dal_risultato(ris, url)
+        """self.risultati_soup_google = [[self.lista_risp_riscontri_D + self.lista_risp_senza_riscontri_D],
+                                      [self.lista_risp_riscontri_DR + self.lista_risp_senza_riscontri_DR]]
+        """
+
+    def punti_dal_risultato(self, risultato, url):
+        if url == self.lista_url[0]:
+            key = '_d_R_'
+        else:
+            key = '_dr_R_'
+
+        for risposta in self.lista_risposte:
+            if risposta not in self.dizionario_di_risposte_e_key_punteggi:
+                self.dizionario_di_risposte_e_key_punteggi[risposta] = {}
+                self.dizionario_di_risposte_e_key_punteggi[risposta][key] = 0
+            else:
+                if key not in self.dizionario_di_risposte_e_key_punteggi[risposta]:
+            #    print(self.dizionario_di_risposte_e_key_punteggi)
+                    self.dizionario_di_risposte_e_key_punteggi[risposta].update({key: 0})
+
+            index_risultato = str(risultato).lower().find(risposta.lower())
+            if index_risultato >= 0:  # se il metodo find non trova niente restiuisce -1
+                # if risposta.lower() in str(risultato).lower():
+                # 1)Se trovo una isposta nel risultat la evidenzio nell'HTML
+                # Se non attacco la lista con queste operazioni non modifico la lista originaria passata alla chiamata
+                # della funzione.
+                risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato + len(risposta):]
+                self.lista_risp_riscontri.append(risultato)
+                # 2) Aggiorno il punteggio
+                self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
+            else:
+               self.lista_risp_senza_riscontri.append(risultato)
+
+
+
     def rendo_template_html(self):
-        #pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
+        pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
         #pprint.pprint(self.risultati_soup_google)
+
         file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('base2.html')
