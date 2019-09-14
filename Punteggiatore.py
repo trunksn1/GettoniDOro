@@ -4,7 +4,7 @@ import requests
 from cf import USER_AGENT, TEMPLATE_DIR, CSS_DIR
 import concurrent.futures
 import threading
-import pprint
+import pprint, time
 import webbrowser
 from jinja2 import Environment, FileSystemLoader
 
@@ -14,8 +14,8 @@ class Punteggiatore():
         self.lista_url = urls
         self.domanda = domanda
         self.lista_risposte = lista_risposte
-
-        #self.download_all_sites(urls)
+        start = time.time()
+       # self.download_all_sites(urls)
         #self.chiama_ottieni_punti()
         #print(TEMPLATE_DIR)
         #self.rendo_template_html()
@@ -27,6 +27,7 @@ class Punteggiatore():
         self.download_all_sites(urls)
         print(TEMPLATE_DIR)
         self.rendo_template_html()
+        print(time.time() - start)
 
     def crea_dizionario_delle_risposte_e_punteggi(self):
         # crea un dizionario con 3 chiavi, ovvero le 3 risposte,
@@ -44,6 +45,8 @@ class Punteggiatore():
             r.raise_for_status()
             html_doc = r.text
             soup = BeautifulSoup(html_doc, 'html.parser')
+            lista_riscontri = []
+            lista_non_riscontri = []
 
             # Tutti i risultati sono al di sotto di un elemento: class='g'
             for g in soup.find_all(class_='g'):
@@ -67,12 +70,19 @@ class Punteggiatore():
                             continue
                         else:
                             stringa = str(s)
-
-                self.chiama_ottieni_punti_da_singolo_risultato(stringa, url)
-            return self.lista_risp_riscontri + self.lista_risp_senza_riscontri
-
-                #risultato.append(stringa)
+                esito, risultato = self.punti_dal_risultato(stringa, url)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+            return lista_riscontri + lista_non_riscontri
+            #risultato.append(stringa)
             #return risultato
+
+            """Introdotto il 14/09 per velocizzare
+                
+            """
+
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
@@ -130,20 +140,13 @@ class Punteggiatore():
         # {Risultato_google che ha una risposta all'interno : [risposta (,eventuale_altra_risposta)]}
         # non volendo più usare la gui questo dizionario mi è inutile. conservo lo scritto a futura memoria.
 
-    def chiama_ottieni_punti_da_singolo_risultato(self, ris, url):
-        print('OTTENGO PUNTI ADESSO DAL RISULTATO')
-        print(url)
-        print(ris)
-        self.punti_dal_risultato(ris, url)
-        """self.risultati_soup_google = [[self.lista_risp_riscontri_D + self.lista_risp_senza_riscontri_D],
-                                      [self.lista_risp_riscontri_DR + self.lista_risp_senza_riscontri_DR]]
-        """
 
     def punti_dal_risultato(self, risultato, url):
         if url == self.lista_url[0]:
             key = '_d_R_'
         else:
             key = '_dr_R_'
+        trovato = False
 
         for risposta in self.lista_risposte:
             if risposta not in self.dizionario_di_risposte_e_key_punteggi:
@@ -161,17 +164,22 @@ class Punteggiatore():
                 # Se non attacco la lista con queste operazioni non modifico la lista originaria passata alla chiamata
                 # della funzione.
                 risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato + len(risposta):]
-                self.lista_risp_riscontri.append(risultato)
+                #self.lista_risp_riscontri.append(risultato)
                 # 2) Aggiorno il punteggio
                 self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
-            else:
-               self.lista_risp_senza_riscontri.append(risultato)
+                trovato = True
 
-
+        return trovato, risultato
 
     def rendo_template_html(self):
+        """for ls in self.risultati_soup_google:
+            print('Una')
+            for el in ls:
+                print(el[19:50])
+
         pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
-        #pprint.pprint(self.risultati_soup_google)
+        print(len(self.risultati_soup_google))"""
+
 
         file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
