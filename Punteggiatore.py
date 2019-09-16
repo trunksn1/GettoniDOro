@@ -15,12 +15,12 @@ class Punteggiatore():
         self.domanda = domanda
         self.lista_risposte = lista_risposte
         start = time.time()
-       # self.download_all_sites(urls)
+        #self.download_all_sites(urls)
         #self.chiama_ottieni_punti()
         #print(TEMPLATE_DIR)
         #self.rendo_template_html()
 
-        ### Introdotottu il 14/09 per miglioare efficienza
+        """ Introdotottu il 14/09 per miglioare efficienza"""
         self.dizionario_di_risposte_e_key_punteggi = {}
         self.lista_risp_riscontri = []
         self.lista_risp_senza_riscontri = []
@@ -70,24 +70,25 @@ class Punteggiatore():
                             continue
                         else:
                             stringa = str(s)
+
+                """Introdotto il 14/09 per velocizzare"""
                 esito, risultato = self.punti_dal_risultato(stringa, url)
                 if esito:
                     lista_riscontri.append(risultato)
                 else:
                     lista_non_riscontri.append(risultato)
             return lista_riscontri + lista_non_riscontri
-            #risultato.append(stringa)
-            #return risultato
 
-            """Introdotto il 14/09 per velocizzare
-                
-            """
+            ### Vecchio metodo
+            #    risultato.append(stringa)
+            #return risultato
 
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            # otterrai una lista contenente due liste, nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
+            # otterrai una lista contenente due liste:
+            # nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
             self.risultati_soup_google = list(executor.map(self.download_site_preserva_html, sites, timeout=3000))
         #print(self.dizionario_di_risposte_e_key_punteggi)
 
@@ -142,29 +143,25 @@ class Punteggiatore():
 
 
     def punti_dal_risultato(self, risultato, url):
-        if url == self.lista_url[0]:
+    #Rispetto alla vecchia implementazione analizzo subito la stringa dei risultati di google per tagliare dei cicli for
+        if url == self.lista_url[0]: #ovvero se l'url è lo stesso url della query per la sola domanda su google
             key = '_d_R_'
         else:
             key = '_dr_R_'
-        trovato = False
 
+        trovato = False
         for risposta in self.lista_risposte:
             if risposta not in self.dizionario_di_risposte_e_key_punteggi:
                 self.dizionario_di_risposte_e_key_punteggi[risposta] = {}
                 self.dizionario_di_risposte_e_key_punteggi[risposta][key] = 0
             else:
                 if key not in self.dizionario_di_risposte_e_key_punteggi[risposta]:
-            #    print(self.dizionario_di_risposte_e_key_punteggi)
                     self.dizionario_di_risposte_e_key_punteggi[risposta].update({key: 0})
 
             index_risultato = str(risultato).lower().find(risposta.lower())
             if index_risultato >= 0:  # se il metodo find non trova niente restiuisce -1
-                # if risposta.lower() in str(risultato).lower():
                 # 1)Se trovo una isposta nel risultat la evidenzio nell'HTML
-                # Se non attacco la lista con queste operazioni non modifico la lista originaria passata alla chiamata
-                # della funzione.
                 risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato + len(risposta):]
-                #self.lista_risp_riscontri.append(risultato)
                 # 2) Aggiorno il punteggio
                 self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
                 trovato = True
@@ -172,15 +169,6 @@ class Punteggiatore():
         return trovato, risultato
 
     def rendo_template_html(self):
-        """for ls in self.risultati_soup_google:
-            print('Una')
-            for el in ls:
-                print(el[19:50])
-
-        pprint.pprint(self.dizionario_di_risposte_e_key_punteggi)
-        print(len(self.risultati_soup_google))"""
-
-
         file_loader = FileSystemLoader(TEMPLATE_DIR)
         env = Environment(loader=file_loader)
         template = env.get_template('base2.html')

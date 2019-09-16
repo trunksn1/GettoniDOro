@@ -6,7 +6,7 @@ except ImportError:
 import os, time
 import cv2
 import numpy as np
-from cf import mult, SCREEN_DIR, RELABOR_DIR
+from cf import mult, SCREEN_DIR, RELABOR_DIR, taglio_x_sinistra, taglio_x_destra, taglio_y_rielab
 from splitanswers import splitanswers
 
 
@@ -70,9 +70,9 @@ class Elaboratore():
         print("punto x =", x)
 
         try:
-            self.cord_r1 = [120, y_risposte[5]+100, x-130, y_risposte[4]-100]
-            self.cord_r2 = [120, y_risposte[3]+100, x-130, y_risposte[2]-100]
-            self.cord_r3 = [120, y_risposte[1]+100, x-130, y_risposte[0]-100]
+            self.cord_r1 = [taglio_x_sinistra, y_risposte[5]+taglio_y_rielab, x-taglio_x_destra, y_risposte[4]-taglio_y_rielab]
+            self.cord_r2 = [taglio_x_sinistra, y_risposte[3]+taglio_y_rielab, x-taglio_x_destra, y_risposte[2]-taglio_y_rielab]
+            self.cord_r3 = [taglio_x_sinistra, y_risposte[1]+taglio_y_rielab, x-taglio_x_destra, y_risposte[0]-taglio_y_rielab]
             self.cord_d = [0, 0, x, y_risposte[5]]
         except IndexError:
             self.cord_r1 = [0,0,0,0]

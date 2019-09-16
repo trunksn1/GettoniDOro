@@ -15,13 +15,23 @@ USER_AGENT = {
 # Moltiplicatore per Resize dell'immagine
 mult = 5
 
-# Dimensione dello screen grab
+### Valido per Screenshot presi attraverso SideSync (Samsung Galaxy S6+)
+### Dimensione dello screen grab
+#x_finale = 500
+#y_finale = 500
+#taglio_x_sinistra = 120
+#taglio_x_destra = 130
+#taglio_y_rielab = 100
+
+# Valido per Screeshot presi attraverso BlueStacks (sul pc di Milano) con risoluzione impostata a 960x540
 x_finale = 500
-y_finale = 500
+y_finale = 550
+taglio_x_sinistra = 180
+taglio_x_destra = 170
+taglio_y_rielab = 100
 
 #Dimensione dello screen grab x Domande
 y_finale_domande = 140
-
 #Dimensione dello screen grab x Risposte
 y_iniziale_risposte = 165
 y_finale_risposte = 320
