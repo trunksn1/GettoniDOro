@@ -19,6 +19,9 @@ while True:
     screen_grabber.screen_grab()
     print('FINE GRAB\n')
     el = Elaboratore(screen_grabber.screenshot_name)
+    el.salva_i_pezzi()
     id = Identificatore(el.pezzi)
     pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
+
+    pp.rendo_template_html()
 

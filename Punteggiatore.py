@@ -8,13 +8,14 @@ import pprint, time
 import webbrowser
 from jinja2 import Environment, FileSystemLoader
 
+
 class Punteggiatore():
     def __init__(self, urls, lista_risposte, domanda):
         self.thread_local = threading.local()
         self.lista_url = urls
         self.domanda = domanda
         self.lista_risposte = lista_risposte
-        start = time.time()
+        #start = time.time()
         #self.download_all_sites(urls)
         #self.chiama_ottieni_punti()
         #print(TEMPLATE_DIR)
@@ -25,9 +26,9 @@ class Punteggiatore():
         self.lista_risp_riscontri = []
         self.lista_risp_senza_riscontri = []
         self.download_all_sites(urls)
-        print(TEMPLATE_DIR)
-        self.rendo_template_html()
-        print(time.time() - start)
+        #print(TEMPLATE_DIR)
+        #self.rendo_template_html()
+        #print(time.time() - start)
 
     def crea_dizionario_delle_risposte_e_punteggi(self):
         # crea un dizionario con 3 chiavi, ovvero le 3 risposte,

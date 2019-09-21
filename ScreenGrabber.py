@@ -9,19 +9,17 @@ from pynput.keyboard import Key, Listener
 from cf import x_finale, y_finale, SCREEN_DIR, RELABOR_DIR
 
 
-
 class ScreenGrab():
     """Oggetto deputato alla cattura dello schermo"""
-    def __init__(self):
-        # self.cords sarò una lista di 4 elementi.
+    def __init__(self, cords=[]):
+        # self.cords sarà una lista di 4 elementi.
         # I primi due sono x e y del punto in cui clicco.
         # Gli ultimi sono x e y calcolati grazie ai parametri che ho messo nel file cf.py
-        #self.cords = []
         if not os.path.isdir(SCREEN_DIR):
             os.makedirs(SCREEN_DIR)
         if not os.path.isdir(RELABOR_DIR):
             os.makedirs(RELABOR_DIR)
-
+        self.cords = cords
 
     def start_screen_grab(self):
         print('Premi F6 per indicare dove inizia la schermata da catturare\n'
@@ -29,7 +27,6 @@ class ScreenGrab():
         with Listener(on_press=self.on_press) as listener:
             listener.join()
         return self.cords
-
 
     def on_press(self, key):
         print('{0} pressed'.format(key))
@@ -62,7 +59,7 @@ class ScreenGrab():
             self.cords.extend([x, y])
             return False
 
-    def calcolo_spazi_domande_e_risposte(self,x=x_finale, y=y_finale):
+    def calcolo_spazi_domande_e_risposte(self, x=x_finale, y=y_finale):
         # Calcola dove si trovano i rettangoli della domanda e delle risposte
         # restituisce una lista che contiene tre liste
         # 0 coordinate domanda
