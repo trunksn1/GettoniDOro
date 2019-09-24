@@ -187,7 +187,7 @@ if __name__ == '__main__':
             scrivi_diario_csv(id.domanda, pp.dizionario_di_risposte_e_key_punteggi, scelta)
         except Exception as e:
             print(e)
-        time.sleep(15)
+        time.sleep(20)
 
         #clicka_risposta(*lista_tuple_coord_risposte[0])
         #break

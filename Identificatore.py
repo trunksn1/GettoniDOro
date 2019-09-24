@@ -32,7 +32,7 @@ class Identificatore():
         pytesseract.pytesseract.tesseract_cmd = PATH_INSTALLAZIONE_TESSERACT
         try:
             # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
-            text = pytesseract.image_to_string(Image.open(filename))#, lang='ita')
+            text = pytesseract.image_to_string(Image.open(filename), lang='ita')
         except Exception as e:
             print("Problema con il riconoscimento di una delle immagini!")
             print(e)
