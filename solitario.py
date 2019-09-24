@@ -5,7 +5,7 @@ from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 from ScreenGrabber import ScreenGrab
-from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore
+from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore_screenshot
 from random import choice
 from collections import OrderedDict
 
@@ -71,6 +71,9 @@ def get_cords_risposte_da_cliccare(posizione_finestra_bluestacks, coords_elabora
 
 
 def are_valid_coords_for_risposte(coords):
+    if len(coords) < 6:
+        print("Non trovato 6 coordinate per le caselle")
+        return False
     if (coords[0] - coords[1] < 400) or (coords[2] - coords[3] < 400) or (coords[4] - coords[5] < 400):
         print('qualche problema a trovare una casella risposte')
         return False
@@ -140,21 +143,22 @@ if __name__ == '__main__':
         screen_grabber.screen_grab('prova')
 
         # Se è stato fatto un errore ed è comparsa la schermata da cliccare allora clicca sul bottone per proseguire
-        coord_centro_risposta_errata = screen_grabber.im.getpixel(tupla_coord_bottone_errore)
-        if coord_centro_risposta_errata == (29, 45, 90):    # Trovo un pixel azzurro tipico della casella dell'erroe
-            x_errore = int(cords[0] + tupla_coord_bottone_errore[0]) #coordinate della finestra di bluestack
-            y_errore = int(cords[1] + tupla_coord_bottone_errore[1] - 250)
+        coord_centro_risposta_errata = screen_grabber.im.getpixel(tupla_coord_bottone_errore_screenshot)
+        if coord_centro_risposta_errata == (53, 204, 252):    # Trovo un pixel azzurro tipico della casella dell'erroe
+            print('RISPOSTA SBAGLIATA')
+            x_errore = int(cords[0] + tupla_coord_bottone_errore_screenshot[0]) #coordinate della finestra di bluestack
+            y_errore = int(cords[1] + tupla_coord_bottone_errore_screenshot[1])
             clicka_risposta(x_errore, y_errore)
             time.sleep(3)
             continue
 
         el = Elaboratore(screen_grabber.screenshot_name)
 
-        #if not are_valid_coords_for_risposte(el.y):
-        #    print('Non trovo una casella di risposte!')
-        #    time.sleep(2)
-        #    os.remove(el.screenshot_name)
-        #    continue
+        if not are_valid_coords_for_risposte(el.y):
+            print('Non trovo una casella di risposte!')
+            time.sleep(2)
+            os.remove(el.screenshot_name)
+            continue
 
         if el.cords:
             el.salva_i_pezzi()

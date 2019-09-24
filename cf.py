@@ -34,7 +34,7 @@ y_inizio_domanda = 250
 # Nel caso in cui sbagli il riquadro da cliccare compare a
 # x: 70, y: 396+250 (il 250 è y dell'inizio domanda)
 # x: 428 y: 426+250
-tupla_coord_bottone_errore = ((70+428)/2), ((396+426+(y_inizio_domanda*2))/2)
+tupla_coord_bottone_errore_screenshot = int(((87+410)/2)), int(((378+440)/2) + 20)
 
 #Dimensione dello screen grab x Domande
 y_finale_domande = 140

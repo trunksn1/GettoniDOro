@@ -61,6 +61,7 @@ class Elaboratore():
     def get_all_cords(self):
         # Chiamo la funzione di fabrizio per avere le coordinate delle ordinate delle risposte dell'immagine elaborata
         y_risposte = splitanswers(self.img)
+        self.y = y_risposte
         print('FABRIZIO: ', y_risposte)
 
         # Controllo subito di avere le coordinate sufficienti dall'immagine rielaborata
