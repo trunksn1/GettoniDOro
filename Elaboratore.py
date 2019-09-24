@@ -14,6 +14,7 @@ class Elaboratore():
     """Oggetto che prende lo screenshot e lo rielabora ottenendo alla fine 4 diverse immagini in bianco e nero 1 è la domandale altre tre sono le singole risposte"""
     def __init__(self, screenshot_name):
         self.screenshot_name = screenshot_name
+
         self.perfeziona_immagine()
         print('ELABORIAMO:')
         print(self.screenshot_name)
@@ -62,8 +63,10 @@ class Elaboratore():
         y_risposte = splitanswers(self.img)
         print('FABRIZIO: ', y_risposte)
 
-        # Serve solo per assegnare all'oggetto le coordinate delle risposte dell'immagine elaborata
-        self.y = y_risposte
+        # Controllo subito di avere le coordinate sufficienti dall'immagine rielaborata
+        #if not self.are_valid_coords_for_risposte(y_risposte):
+        #    self.cords = []
+        #    return
 
         # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
@@ -77,20 +80,31 @@ class Elaboratore():
             self.cord_d = [0, 0, x, y_risposte[5]]
         except IndexError:
             print('Elaboratore: get_all_cords IndexError')
-            self.cord_r1 = [0,0,0,0]
-            self.cord_r2 = [0,0,0,0]
-            self.cord_r3 = [0,0,0,0]
-            try:
-                self.cord_d = [0, 0, x, y_risposte[5]]
-            except IndexError:
-                self.cord_d = [0, 0, 0, 0]
-
+            self.cords = []
+            return
+            #self.cord_r1 = [0,0,0,0]
+            #self.cord_r2 = [0,0,0,0]
+            #self.cord_r3 = [0,0,0,0]
+            #try:
+            #   self.cord_d = [0, 0, x, y_risposte[5]]
+            #except IndexError:
+            #   self.cord_d = [0, 0, 0, 0]
 
         self.cords = [self.cord_d] + [self.cord_r1] + [self.cord_r2] + [self.cord_r3]
 
 
+    def are_valid_coords_for_risposte(self, coords):
+        if len(coords) < 6:
+            print('Manca una coordinata delle caselle risposte')
+            return False
+        elif (coords[0] - coords[1] < 400) or (coords[2] - coords[3] < 400) or (coords[4] - coords[5] < 400):
+            print('qualche problema a trovare una casella risposte')
+            return False
+        return True
+
+
     def salva_i_pezzi(self):
-        # Input: immagine elaborata e lista di coordinate delle risposte
+        # Input: immagine in bianco e nero elaborata e lista di coordinate delle risposte
         # Output: salvo singolarmente le immagini della domanda e delle 3 risposte
         self.pezzi = []
 

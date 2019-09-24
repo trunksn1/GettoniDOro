@@ -29,6 +29,12 @@ y_finale = 550
 taglio_x_sinistra = 180
 taglio_x_destra = 170
 taglio_y_rielab = 100
+# La coordinata della y a cui parte la domanda è circa 250 pixel in basso rispetto la finestra del quiz
+y_inizio_domanda = 250
+# Nel caso in cui sbagli il riquadro da cliccare compare a
+# x: 70, y: 396+250 (il 250 è y dell'inizio domanda)
+# x: 428 y: 426+250
+tupla_coord_bottone_errore = ((70+428)/2), ((396+426+(y_inizio_domanda*2))/2)
 
 #Dimensione dello screen grab x Domande
 y_finale_domande = 140

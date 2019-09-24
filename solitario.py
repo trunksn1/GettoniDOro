@@ -1,11 +1,12 @@
 import win32gui, win32api, win32con
-import os, time
+import csv, os, time
 from Quiz import Quiz
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 from ScreenGrabber import ScreenGrab
-from cf import mult
+from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore
+from random import choice
 from collections import OrderedDict
 
     #TODO capisco dove si trova il quiz ed ottengo lo screenshot del quiz
@@ -41,11 +42,13 @@ def get_bluestacks_coords():
         y = rect[1]
         w = rect[2] - x
         h = rect[3] - y
+        rect = (rect[0], rect[1] + y_inizio_domanda, rect[2], rect[3])
         print("\tLocation: (%d, %d)" % (x, y))
         print("\t    Size: (%d, %d)" % (w, h))
         return rect
     else:
         print('PROGRAM NOT FOUND!')
+        time.sleep(60)
         return
 
 def get_cords_risposte_da_cliccare(posizione_finestra_bluestacks, coords_elaboratore):
@@ -66,11 +69,6 @@ def get_cords_risposte_da_cliccare(posizione_finestra_bluestacks, coords_elabora
         lista_coord_risp_wnd_bluestack.append((x_da_cliccare, y_da_cliccare))
     return lista_coord_risp_wnd_bluestack
 
-def clicka_risposta(x,y):
-    print('Cliccato {}, {}'.format(x,y))
-    win32api.SetCursorPos((x,y))
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
 
 def are_valid_coords_for_risposte(coords):
     if (coords[0] - coords[1] < 400) or (coords[2] - coords[3] < 400) or (coords[4] - coords[5] < 400):
@@ -78,51 +76,114 @@ def are_valid_coords_for_risposte(coords):
         return False
     return True
 
-def trova_risposta_esatta(diz_risp_e_key_punteggi, lista_coord_click_su_risposte, str_domanda):
+
+def trova_risposta_esatta(diz_risp_coord_punteggi, str_domanda):
     keyword = ["NON", "FALSO", "FALSA"]
-    #if not keyword in str_domanda:
+    domanda_negativa = any(k in str_domanda for k in keyword)
+    print(domanda_negativa)
+    print(str_domanda)
+    risp_giusta = []
+    max = 0
+    min = 11
+    for risp in diz_risp_coord_punteggi:
+        somma = diz_risp_coord_punteggi[risp]['_d_R_'] + diz_risp_coord_punteggi[risp]['_dr_R_']
+        diz_risp_coord_punteggi[risp].update({"TOT": somma})
+        if not domanda_negativa:
+        #if keyword not in str_domanda:
+            """Indica la risposta col punteggio più alto"""
+            print('MAX')
+            if somma > max:
+                risp_giusta = [risp]
+                max = somma
+            elif somma == max:
+                risp_giusta.append(risp)
+        else:
+            """Indica la risposta col punteggio più basso"""
+            print('MIN')
+            if somma < min:
+                risp_giusta = [risp]
+                min = somma
+            elif somma == min:
+                risp_giusta.append(risp)
+    return risp_giusta
 
-    for k in diz_risp_e_key_punteggi:
-        somma = diz_risp_e_key_punteggi[k]['_d_R_'] + diz_risp_e_key_punteggi[k]['_dr_R_']
-        diz_risp_e_key_punteggi[k].update({"TOT": somma})
+
+def clicka_risposta(x,y):
+    print('Cliccato {}, {}'.format(x,y))
+    win32api.SetCursorPos((x,y))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
 
 
-    if keyword not in str_domanda:
-        """Indica la risposta col punteggio più alto"""
+def scrivi_diario_csv(domanda, diz_risposte, scelta):
+    print('SCRIVERO')
+    #immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
+    with open('auto_diario.csv', 'a') as log:
+        scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        mess = '****** Domanda numero: {} ******'
+        scrivente.writerow([])
+        scrivente.writerow([mess, '****', '****', '****'])
+        scrivente.writerow([domanda, 'SoloD', '+Risp', 'TOT'])
+        for k in diz_risposte:
+            scrivente.writerow([k, diz_risposte[k]['_d_R_'], diz_risposte[k]['_dr_R_'], diz_risposte[k]['TOT']])
+        scrivente.writerow([scelta])
 
-        pass
-    else:
-        pass
 
 
 if __name__ == '__main__':
-    quiz = Quiz()
     while True:
         cords = get_bluestacks_coords()
         if not cords:
-            time.sleep(2)
+            time.sleep(1)
             continue
-        quiz.coordinate_bluestacks = cords
         screen_grabber = ScreenGrab(cords)
         screen_grabber.screen_grab('prova')
-        el = Elaboratore(screen_grabber.screenshot_name)
 
-        if not are_valid_coords_for_risposte(el.y):
-            print('Non trovo una casella di risposte!')
-            time.sleep(2)
-            os.remove(el.screenshot_name)
+        # Se è stato fatto un errore ed è comparsa la schermata da cliccare allora clicca sul bottone per proseguire
+        coord_centro_risposta_errata = screen_grabber.im.getpixel(tupla_coord_bottone_errore)
+        if coord_centro_risposta_errata == (29, 45, 90):    # Trovo un pixel azzurro tipico della casella dell'erroe
+            x_errore = int(cords[0] + tupla_coord_bottone_errore[0]) #coordinate della finestra di bluestack
+            y_errore = int(cords[1] + tupla_coord_bottone_errore[1] - 250)
+            clicka_risposta(x_errore, y_errore)
+            time.sleep(3)
             continue
 
-        el.salva_i_pezzi()
+        el = Elaboratore(screen_grabber.screenshot_name)
+
+        #if not are_valid_coords_for_risposte(el.y):
+        #    print('Non trovo una casella di risposte!')
+        #    time.sleep(2)
+        #    os.remove(el.screenshot_name)
+        #    continue
+
+        if el.cords:
+            el.salva_i_pezzi()
+        else:
+            print('Non trovo una casella di risposte!')
+            time.sleep(2)
+            continue
+
         lista_tuple_coord_risposte = get_cords_risposte_da_cliccare(cords[:2], el.cords[1:])
 
         id = Identificatore(el.pezzi)
-        pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
-        diz_risposte_ordinato = OrderedDict(pp.dizionario_di_risposte_e_key_punteggi)
+        pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda, lista_tuple_coord_risposte)
+
         print(pp.dizionario_di_risposte_e_key_punteggi)
-        print(diz_risposte_ordinato)
-        print(id.risposte)
-        break
+        lista_risp_giusta = trova_risposta_esatta(pp.dizionario_di_risposte_e_key_punteggi, id.domanda)
+
+        if len(lista_risp_giusta) > 1:
+            scelta = choice(lista_risp_giusta)
+        else:
+            scelta = lista_risp_giusta[0]
+        print(pp.dizionario_di_risposte_e_key_punteggi[scelta]['coord_click'])
+        print(type(pp.dizionario_di_risposte_e_key_punteggi[scelta]['coord_click']))
+        clicka_risposta(*pp.dizionario_di_risposte_e_key_punteggi[scelta]['coord_click'])
+        #pp.rendo_template_html()
+        try:
+            scrivi_diario_csv(id.domanda, pp.dizionario_di_risposte_e_key_punteggi, scelta)
+        except Exception as e:
+            print(e)
+        time.sleep(15)
 
         #clicka_risposta(*lista_tuple_coord_risposte[0])
         #break

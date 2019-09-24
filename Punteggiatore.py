@@ -10,11 +10,12 @@ from jinja2 import Environment, FileSystemLoader
 
 
 class Punteggiatore():
-    def __init__(self, urls, lista_risposte, domanda):
+    def __init__(self, urls, lista_risposte, domanda, coordinate_click=()):
         self.thread_local = threading.local()
         self.lista_url = urls
         self.domanda = domanda
         self.lista_risposte = lista_risposte
+        self.coord_click = coordinate_click
         #start = time.time()
         #self.download_all_sites(urls)
         #self.chiama_ottieni_punti()
@@ -22,7 +23,10 @@ class Punteggiatore():
         #self.rendo_template_html()
 
         """ Introdotottu il 14/09 per miglioare efficienza"""
-        self.dizionario_di_risposte_e_key_punteggi = {}
+        if coordinate_click:
+            self.prepara_dizionario_risposte_con_punteggi_e_coordinate_cliccabili()
+        else:
+            self.dizionario_di_risposte_e_key_punteggi = {}
         self.lista_risp_riscontri = []
         self.lista_risp_senza_riscontri = []
         self.download_all_sites(urls)
@@ -30,13 +34,13 @@ class Punteggiatore():
         #self.rendo_template_html()
         #print(time.time() - start)
 
-    def crea_dizionario_delle_risposte_e_punteggi(self):
-        # crea un dizionario con 3 chiavi, ovvero le 3 risposte,
-        # i valori delle 3 chiavi è un altro dizionario in cui le chiavi sono le key della gui,
-        # ed il suo valore è il punteggio
-        self.devoto_oli = {}
-        for risp in self.lista_risposte:
-            self.devoto_oli[risp] = {}
+    def prepara_dizionario_risposte_con_punteggi_e_coordinate_cliccabili(self):
+        # crea un dizionario con 3 chiavi, ovvero le 3 risposte i cui valori sono altri tre dizionari:
+        # le chiavi sono i punteggi ottenuti da google, e le coordinate (una tupla) da cliccare nel quiz
+        self.dizionario_di_risposte_e_key_punteggi = {i: {
+            '_d_R_': 0, '_dr_R_': 0, 'coord_click': self.coord_click[n]} for n, i in enumerate(self.lista_risposte)}
+        print(self.dizionario_di_risposte_e_key_punteggi)
+
 
     def download_site_preserva_html(self, url):
         # Tenta di guardare anche nei box di google
