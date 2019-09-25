@@ -22,11 +22,12 @@ class Punteggiatore():
         #print(TEMPLATE_DIR)
         #self.rendo_template_html()
 
-        """ Introdotottu il 14/09 per miglioare efficienza"""
-        if coordinate_click:
-            self.prepara_dizionario_risposte_con_punteggi_e_coordinate_cliccabili()
-        else:
-            self.dizionario_di_risposte_e_key_punteggi = {}
+        """ Introdototto il 14/09 per miglioare efficienza"""
+        #if coordinate_click:
+        #    self.prepara_dizionario_risposte_con_punteggi_e_coordinate_cliccabili()
+        #else:
+        #    self.dizionario_di_risposte_e_key_punteggi = {}
+        self.prepara_dizionario_risposte_con_punteggi_e_coordinate_cliccabili()
         self.lista_risp_riscontri = []
         self.lista_risp_senza_riscontri = []
         self.download_all_sites(urls)
@@ -37,6 +38,8 @@ class Punteggiatore():
     def prepara_dizionario_risposte_con_punteggi_e_coordinate_cliccabili(self):
         # crea un dizionario con 3 chiavi, ovvero le 3 risposte i cui valori sono altri tre dizionari:
         # le chiavi sono i punteggi ottenuti da google, e le coordinate (una tupla) da cliccare nel quiz
+        if not self.coord_click:
+            self.coord_click = ((0,0), (0,0), (0,0))
         self.dizionario_di_risposte_e_key_punteggi = {i: {
             '_d_R_': 0, '_dr_R_': 0, 'coord_click': self.coord_click[n]} for n, i in enumerate(self.lista_risposte)}
         print(self.dizionario_di_risposte_e_key_punteggi)
@@ -87,7 +90,6 @@ class Punteggiatore():
             ### Vecchio metodo
             #    risultato.append(stringa)
             #return risultato
-
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing

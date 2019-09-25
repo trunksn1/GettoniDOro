@@ -23,5 +23,6 @@ while True:
     id = Identificatore(el.pezzi)
     pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
 
+    print(pp.dizionario_di_risposte_e_key_punteggi)
     pp.rendo_template_html()
 
