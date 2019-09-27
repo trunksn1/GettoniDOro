@@ -1,13 +1,12 @@
 import win32gui, win32api, win32con
 import csv, os, time
-from Quiz import Quiz
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 from ScreenGrabber import ScreenGrab
 from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore_screenshot
 from random import choice
-from collections import OrderedDict
+
 
     #TODO capisco dove si trova il quiz ed ottengo lo screenshot del quiz
     #TODO con la funzione di fabrizio vedo se trovo i box delle risposte
@@ -19,21 +18,13 @@ from collections import OrderedDict
     # se la domanda contiene un NON/Falso/Falsa clicco sulla risposta con meno punti, se pari si fa a random
     # fine, invio uno screenshot col risultato finale al telefono
 
-"""
-def callback(hwnd, extra):
-    rect = win32gui.GetWindowRect(hwnd)
-    x = rect[0]
-    y = rect[1]
-    w = rect[2] - x
-    h = rect[3] - y
-    print("Window %s:" % win32gui.GetWindowText(hwnd))
-    print("\tLocation: (%d, %d)" % (x, y))
-    print("\t    Size: (%d, %d)" % (w, h))
-"""
 
 def get_bluestacks_coords():
     #win32gui.EnumWindows(callback, None)
-    win2find = "BlueStacks"
+    #win2find = "BlueStacks"
+    #win2find = "Cazzstacks.mkv - Lettore multimediale VLC"
+    #win2find = "VLC (Direct3D output)"
+    win2find = "Stacks.png - IrfanView"
     whnd = win32gui.FindWindowEx(None, None, None, win2find)
     if not (whnd == 0):
         print('FOUND!')
@@ -42,7 +33,7 @@ def get_bluestacks_coords():
         y = rect[1]
         w = rect[2] - x
         h = rect[3] - y
-        rect = (rect[0], rect[1] + y_inizio_domanda, rect[2], rect[3])
+        #rect = (rect[0], rect[1] + y_inizio_domanda, rect[2], rect[3])
         print("\tLocation: (%d, %d)" % (x, y))
         print("\t    Size: (%d, %d)" % (w, h))
         return rect
@@ -51,8 +42,20 @@ def get_bluestacks_coords():
         time.sleep(60)
         return
 
+def callback(hwnd, extra):
+    rect = win32gui.GetWindowRect(hwnd)
+    x = rect[0]
+    y = rect[1]
+    w = rect[2] - x
+    h = rect[3] - y
+    print("Window %s:" % win32gui.GetWindowText(hwnd))
+    #print("\tLocation: (%d, %d)" % (x, y))
+    #print("\t    Size: (%d, %d)" % (w, h))
+
+
+
 def get_cords_risposte_da_cliccare(posizione_finestra_bluestacks, coords_elaboratore):
-    """Usa solo le coordinate delle risposte!
+    """Usa solo le coordinate delle risposte!+++++
     Ottengo il punto centrale della casella delle tre risposte!"""
     lista_coord_risp_wnd_bluestack = []
     print(posizione_finestra_bluestacks)
@@ -69,6 +72,20 @@ def get_cords_risposte_da_cliccare(posizione_finestra_bluestacks, coords_elabora
         lista_coord_risp_wnd_bluestack.append((x_da_cliccare, y_da_cliccare))
     return lista_coord_risp_wnd_bluestack
 
+
+def get_punto_msg_errore(coords_quiz):
+    altezza = coords_quiz[3] - coords_quiz[1]
+    larghezza = coords_quiz[2] - coords_quiz[0]
+
+    y_in = (0.682 * altezza) + coords_quiz[1]
+    y_fin = (0.747 * altezza) + coords_quiz[1]
+
+    x_sin = (0.139 * larghezza) + coords_quiz[0]
+    x_des = (0.86 * larghezza) + coords_quiz[0]
+    punto = int(((x_sin + x_des) / 2)), int(((y_in + y_fin) / 2) + 20)
+    print(coords_quiz)
+    print("PUNTO ERRORE\n", punto)
+    return punto
 
 def are_valid_coords_for_risposte(coords):
     if len(coords) < 6:
@@ -111,7 +128,15 @@ def trova_risposta_esatta(diz_risp_coord_punteggi, str_domanda):
     return risp_giusta
 
 
-def clicka_risposta(x,y):
+#
+def correggi_punto(posizione_iniziale, posizione_immagine):
+    print(posizione_iniziale)
+    print(posizione_immagine)
+    x = posizione_immagine[0] + posizione_iniziale[0]
+    y = posizione_immagine[1]
+    return x,y
+
+def clicka_risposta(x, y):
     print('Cliccato {}, {}'.format(x,y))
     win32api.SetCursorPos((x,y))
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
@@ -132,29 +157,38 @@ def scrivi_diario_csv(domanda, diz_risposte, scelta):
         scrivente.writerow([scelta])
 
 
-
 if __name__ == '__main__':
     while True:
+        # 1 Ottengo le coordinate del programma Bluestacks
+        # coords = [x_a_sx, y_a_sx, x_b_dx, y_b_dx]
         cords = get_bluestacks_coords()
+        # Se Bluestacks non viene trovato, ricercarlo tra 60 secondi
         if not cords:
-            time.sleep(1)
+            time.sleep(60)
             continue
-        screen_grabber = ScreenGrab(cords)
-        screen_grabber.screen_grab('prova')
 
-        # Se è stato fatto un errore ed è comparsa la schermata da cliccare allora clicca sul bottone per proseguire
-        coord_centro_risposta_errata = screen_grabber.im.getpixel(tupla_coord_bottone_errore_screenshot)
-        if coord_centro_risposta_errata == (53, 204, 252):    # Trovo un pixel azzurro tipico della casella dell'erroe
-            print('RISPOSTA SBAGLIATA')
-            x_errore = int(cords[0] + tupla_coord_bottone_errore_screenshot[0]) #coordinate della finestra di bluestack
-            y_errore = int(cords[1] + tupla_coord_bottone_errore_screenshot[1])
-            clicka_risposta(x_errore, y_errore)
+        # 2 Catturiamo la schermata di BlueStacks
+        screen_grabber = ScreenGrab(cords)
+        # La schermata catturata viene ristretta alla zona in cui compaiono le parti signfiicative:
+        # Domanda con risposte, schermata di errore per continuare
+        screen_grabber.calcolo_spazi_domande_e_risposte(is_solitario=True)
+        # Viene salvato lo screenshot della schermata ristretta
+        screen_grabber.screen_grab('prova')
+        # 3 Andiamo a vedere se c'è la schermata  di errore
+        if screen_grabber.is_messaggio_errore():
+            punto_corretto = correggi_punto(cords, screen_grabber.punto)
+            clicka_risposta(*punto_corretto)
             time.sleep(3)
             continue
 
         el = Elaboratore(screen_grabber.screenshot_name)
 
         if not are_valid_coords_for_risposte(el.y):
+            print('SIAMO AL PRIMO IF, OVVERO DOPO LA FUNZIONE CHE VALIDA LE COORDINATe')
+            try:
+                print(el.y)
+            except:
+                print("Non stampo el.y")
             print('Non trovo una casella di risposte!')
             time.sleep(2)
             os.remove(el.screenshot_name)
@@ -163,11 +197,15 @@ if __name__ == '__main__':
         if el.cords:
             el.salva_i_pezzi()
         else:
-            print('Non trovo una casella di risposte!')
+            print('SECONDO IF')
+            try:
+                print(el.cords)
+            except:
+                pass
             time.sleep(2)
             continue
 
-        lista_tuple_coord_risposte = get_cords_risposte_da_cliccare(cords[:2], el.cords[1:])
+        lista_tuple_coord_risposte = get_cords_risposte_da_cliccare(screen_grabber.cords[:2], el.cords[1:])
 
         id = Identificatore(el.pezzi)
         pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda, lista_tuple_coord_risposte)
@@ -182,6 +220,7 @@ if __name__ == '__main__':
         print(pp.dizionario_di_risposte_e_key_punteggi[scelta]['coord_click'])
         print(type(pp.dizionario_di_risposte_e_key_punteggi[scelta]['coord_click']))
         clicka_risposta(*pp.dizionario_di_risposte_e_key_punteggi[scelta]['coord_click'])
+        print(scelta)
         #pp.rendo_template_html()
         try:
             scrivi_diario_csv(id.domanda, pp.dizionario_di_risposte_e_key_punteggi, scelta)

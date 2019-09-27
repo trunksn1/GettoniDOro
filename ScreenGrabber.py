@@ -59,7 +59,7 @@ class ScreenGrab():
             self.cords.extend([x, y])
             return False
 
-    def calcolo_spazi_domande_e_risposte(self, x=x_finale, y=y_finale):
+    def calcolo_spazi_domande_e_risposte(self, x=x_finale, y=y_finale, is_solitario=False):
         # Calcola dove si trovano i rettangoli della domanda e delle risposte
         # restituisce una lista che contiene tre liste
         # 0 coordinate domanda
@@ -68,15 +68,71 @@ class ScreenGrab():
 
         # self.cords all'inizio è una lista il cui unico elemento è una tupla con le coordinate del punto cliccato
         #inizio_domande = list(self.cords[0])
+        if is_solitario:
+            largh = self.cords[2] - self.cords[0]
+            altezz = self.cords[3] - self.cords[1]
+            print('SOLISSIMO')
+            print(self.cords)
+            y_in = self.cords[1] + int(altezz * 0.265)
+            y_fin = self.cords[1] + int(altezz * 0.914)
+            self.cords = self.cords[0], y_in, self.cords[2], y_fin
+            self.dimensioni_originali = largh, altezz
+            print(self.cords)
         if len(self.cords) < 4:
             inizio_domande = self.cords
             fine_risposte = [self.cords[0] + x, self.cords[1] + y]
             self.cords = inizio_domande + fine_risposte
 
+    def is_messaggio_errore(self):
+        """Questa funzione utilizza un'immagine non tagliata del programma bluestacks"""
+        self.get_punto_msg_errore()
+        colore_centro_risp_errata = self.im.getpixel(self.punto)
+        if colore_centro_risp_errata == (53, 204, 252):
+            print('RISPOSTA SBAGLIATA')
+            self.punto = self.punto[0], self.punto[1] + self.cords[1]
+            return True
+        return False
+
+    def get_punto_msg_errore(self):
+        """Questa funzione utilizza un'immagine tagliata del programma bluestacks"""
+        altezza = self.cords[3] - self.cords[1]
+        larghezza = self.cords[2] - self.cords[0]
+
+        y_in = (0.637 * altezza) #+ self.cords[1]
+        y_fin = (0.73 * altezza) #+ self.cords[1]
+
+        x_sin = (0.139 * larghezza) #+ self.cords[0]
+        x_des = (0.86 * larghezza) #+ self.cords[0]
+        self.punto = int(((x_sin + x_des) / 2)), int(((y_in + y_fin) / 2))
+        print("punto", self.punto)
+        return self.punto
+
+
+
     def screen_grab(self, nome=''):
-        box = (self.cords)
+        box = tuple(self.cords)
         if not nome:
             nome = 'full_snap__'
         self.screenshot_name = (os.path.join(SCREEN_DIR, nome + str(int(time.time())) + '.png'))
         self.im = ImageGrab.grab(box)
+        self.im.save(self.screenshot_name, 'PNG')
+        #############################
+        #box2 = self.cords[0], (self.cords[1] - 200), *self.cords[2:]
+        #print('BOX222222')
+        #print(box2)
+        #print(box)
+        #self.im2 = ImageGrab.grab(box2)
+        #self.screenshot_name2 = (os.path.join(SCREEN_DIR, nome + str(int(time.time())) + 'copia.png'))
+        #self.im2.save(self.screenshot_name2, 'PNG')
+
+    def screen_grab_solitario(self, nome=''):
+        box = tuple(self.cords)
+        if not nome:
+            nome = 'full_snap__'
+        self.screenshot_name = (os.path.join(SCREEN_DIR, nome + str(int(time.time())) + '.png'))
+        self.im = ImageGrab.grab(box)
+        print('Ho preso questo BOX')
+        print(box)
+
+    def salva_screen_grab(self):
         self.im.save(self.screenshot_name, 'PNG')
