@@ -23,8 +23,8 @@ def get_bluestacks_coords():
     #win32gui.EnumWindows(callback, None)
     #win2find = "BlueStacks"
     #win2find = "Cazzstacks.mkv - Lettore multimediale VLC"
-    #win2find = "VLC (Direct3D output)"
-    win2find = "Stacks.png - IrfanView"
+    win2find = "VLC (Direct3D output)"
+    #win2find = "Stacks.png - IrfanView"
     whnd = win32gui.FindWindowEx(None, None, None, win2find)
     if not (whnd == 0):
         print('FOUND!')
@@ -51,7 +51,6 @@ def callback(hwnd, extra):
     print("Window %s:" % win32gui.GetWindowText(hwnd))
     #print("\tLocation: (%d, %d)" % (x, y))
     #print("\t    Size: (%d, %d)" % (w, h))
-
 
 
 def get_cords_risposte_da_cliccare(posizione_finestra_bluestacks, coords_elaboratore):
@@ -128,7 +127,7 @@ def trova_risposta_esatta(diz_risp_coord_punteggi, str_domanda):
     return risp_giusta
 
 
-#
+
 def correggi_punto(posizione_iniziale, posizione_immagine):
     print(posizione_iniziale)
     print(posizione_immagine)
