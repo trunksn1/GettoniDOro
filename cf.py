@@ -24,6 +24,7 @@ mult = 5
 #taglio_y_rielab = 100
 
 # Valido per Screeshot presi attraverso BlueStacks (sul pc di Milano) con risoluzione impostata a 960x540
+# lanciando solitario.py le dimensioni della schermata che al 28/09/2019 funziona p di (499, 925)
 x_finale = 500
 y_finale = 550
 taglio_x_sinistra = 180
@@ -31,10 +32,7 @@ taglio_x_destra = 170
 taglio_y_rielab = 100
 # La coordinata della y a cui parte la domanda è circa 250 pixel in basso rispetto la finestra del quiz
 y_inizio_domanda = 250
-# Nel caso in cui sbagli il riquadro da cliccare compare a
-# x: 70, y: 396+250 (il 250 è y dell'inizio domanda)
-# x: 428 y: 426+250
-tupla_coord_bottone_errore_screenshot = int(((87+410)/2)), int(((378+440)/2) + 20)
+
 
 #Dimensione dello screen grab x Domande
 y_finale_domande = 140

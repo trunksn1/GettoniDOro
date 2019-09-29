@@ -83,13 +83,14 @@ class ScreenGrab():
             fine_risposte = [self.cords[0] + x, self.cords[1] + y]
             self.cords = inizio_domande + fine_risposte
 
-    def is_messaggio_errore(self):
+    def is_messaggio_errore(self, punto):
         """Questa funzione utilizza un'immagine non tagliata del programma bluestacks"""
-        self.get_punto_msg_errore()
-        colore_centro_risp_errata = self.im.getpixel(self.punto)
+        #self.get_punto_msg_errore()
+        print(punto)
+        colore_centro_risp_errata = self.im.getpixel(punto)
         if colore_centro_risp_errata == (53, 204, 252):
             print('RISPOSTA SBAGLIATA')
-            self.punto = self.punto[0], self.punto[1] + self.cords[1]
+            #self.punto_corretto = self.punto[0], self.punto[1] + self.cords[1]
             return True
         return False
 

@@ -3,6 +3,7 @@ import csv, os, time
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
+from Sarto import Sarto
 from ScreenGrabber import ScreenGrab
 from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore_screenshot
 from random import choice
@@ -128,11 +129,9 @@ def trova_risposta_esatta(diz_risp_coord_punteggi, str_domanda):
 
 
 
-def correggi_punto(posizione_iniziale, posizione_immagine):
-    print(posizione_iniziale)
-    print(posizione_immagine)
-    x = posizione_immagine[0] + posizione_iniziale[0]
-    y = posizione_immagine[1]
+def correggi_punto(cordinate_programma, punto_da_correggere):
+    x = punto_da_correggere[0] + cordinate_programma[0]
+    y = punto_da_correggere[1] + cordinate_programma[1]
     return x,y
 
 def clicka_risposta(x, y):
@@ -160,22 +159,35 @@ if __name__ == '__main__':
     while True:
         # 1 Ottengo le coordinate del programma Bluestacks
         # coords = [x_a_sx, y_a_sx, x_b_dx, y_b_dx]
-        cords = get_bluestacks_coords()
-        # Se Bluestacks non viene trovato, ricercarlo tra 60 secondi
-        if not cords:
-            time.sleep(60)
-            continue
+        cord_domanda = ''
+        punto_errore = ''
+        punto_corretto = ''
+
+        sarto = Sarto()
+        print(sarto.inizializzato)
+        if sarto.inizializzato:
+            cords_programma = sarto.get_program_cords('BlueStacks')
+            # Se Bluestacks non viene trovato, ricercarlo tra 60 secondi
+            if not cords_programma:
+                sarto.inizializzato = False
+                time.sleep(60)
+                continue
+            cord_domanda = sarto.get_cords_domande_e_risposte()
+            punto_errore = sarto.get_punto_msg_errore()
+            punto_corretto = sarto.correggi_punto(cords_programma, punto_errore)
+
+        #cords = get_bluestacks_coords()
 
         # 2 Catturiamo la schermata di BlueStacks
-        screen_grabber = ScreenGrab(cords)
+        screen_grabber = ScreenGrab(cord_domanda)
         # La schermata catturata viene ristretta alla zona in cui compaiono le parti signfiicative:
         # Domanda con risposte, schermata di errore per continuare
-        screen_grabber.calcolo_spazi_domande_e_risposte(is_solitario=True)
+        #screen_grabber.calcolo_spazi_domande_e_risposte(is_solitario=True)
         # Viene salvato lo screenshot della schermata ristretta
         screen_grabber.screen_grab('prova')
         # 3 Andiamo a vedere se c'è la schermata  di errore
-        if screen_grabber.is_messaggio_errore():
-            punto_corretto = correggi_punto(cords, screen_grabber.punto)
+        if screen_grabber.is_messaggio_errore(punto_errore):
+            #punto_corretto = correggi_punto(cord_domanda, punto_errore)
             clicka_risposta(*punto_corretto)
             time.sleep(3)
             continue
@@ -225,7 +237,7 @@ if __name__ == '__main__':
             scrivi_diario_csv(id.domanda, pp.dizionario_di_risposte_e_key_punteggi, scelta)
         except Exception as e:
             print(e)
-        time.sleep(20)
+        time.sleep(25)
 
         #clicka_risposta(*lista_tuple_coord_risposte[0])
         #break
