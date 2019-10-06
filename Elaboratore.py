@@ -52,10 +52,10 @@ class Elaboratore():
         # img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 2)
 
         # Questa cosa nn serve, tanto l'immagine rielaborata è nella variabile img
-        nome_f = os.path.join(SCREEN_DIR, 'Rielabor__' + os.path.basename(self.screenshot_name))
+        #nome_f = os.path.join(SCREEN_DIR, 'Rielabor__' + os.path.basename(self.screenshot_name))
         #print(self.screenshot_name)
         #print(nome_f)
-        cv2.imwrite(nome_f, self.img)
+        #cv2.imwrite(nome_f, self.img)
 
 
     def get_all_cords(self):

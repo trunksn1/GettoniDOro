@@ -54,10 +54,14 @@ class Sarto():
 
         x_sin = (0.139 * larghezza)
         x_des = (0.86 * larghezza)
-        self.punto = int(((x_sin + x_des) / 2)), int(((y_in + y_fin) / 2))
+        # il -10 serve solo a beccare un pixel azzurro nella casella dell'errore
+        self.punto = int(((x_sin + x_des) / 2)), int(((y_in + y_fin) / 2) -10)
         return self.punto
 
     def correggi_punto(self, cordinate_programma, punto_da_correggere):
+        # TODO Riscrivila senza parametri, usi direttamente self.punto, self.rect e self.cords
+        print('Aggiungo all y')
+        print(cordinate_programma[1])
         x = punto_da_correggere[0] + cordinate_programma[0]
-        y = punto_da_correggere[1] + cordinate_programma[1]
+        y = punto_da_correggere[1] + cordinate_programma[1] + self.cords[1]
         return x, y

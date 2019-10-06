@@ -5,7 +5,7 @@ from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 from Sarto import Sarto
 from ScreenGrabber import ScreenGrab
-from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore_screenshot
+from cf import mult, y_inizio_domanda
 from random import choice
 
 
@@ -22,9 +22,9 @@ from random import choice
 
 def get_bluestacks_coords():
     #win32gui.EnumWindows(callback, None)
-    #win2find = "BlueStacks"
+    win2find = "BlueStacks"
     #win2find = "Cazzstacks.mkv - Lettore multimediale VLC"
-    win2find = "VLC (Direct3D output)"
+    #win2find = "VLC (Direct3D output)"
     #win2find = "Stacks.png - IrfanView"
     whnd = win32gui.FindWindowEx(None, None, None, win2find)
     if not (whnd == 0):
@@ -140,6 +140,9 @@ def clicka_risposta(x, y):
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
 
+def sposta_mouse_dalle_palle():
+    win32api.SetCursorPos((0, 0))
+
 
 def scrivi_diario_csv(domanda, diz_risposte, scelta):
     print('SCRIVERO')
@@ -166,6 +169,7 @@ if __name__ == '__main__':
         sarto = Sarto()
         print(sarto.inizializzato)
         if sarto.inizializzato:
+            #cords_programma = sarto.get_program_cords('VLC (Direct3D output)')
             cords_programma = sarto.get_program_cords('BlueStacks')
             # Se Bluestacks non viene trovato, ricercarlo tra 60 secondi
             if not cords_programma:
@@ -195,7 +199,7 @@ if __name__ == '__main__':
         el = Elaboratore(screen_grabber.screenshot_name)
 
         if not are_valid_coords_for_risposte(el.y):
-            print('SIAMO AL PRIMO IF, OVVERO DOPO LA FUNZIONE CHE VALIDA LE COORDINATe')
+            print('SIAMO AL PRIMO IF, OVVERO DOPO LA FUNZIONE CHE VALIDA LE COORDINATE')
             try:
                 print(el.y)
             except:
@@ -238,6 +242,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
         time.sleep(25)
+        sposta_mouse_dalle_palle()
 
         #clicka_risposta(*lista_tuple_coord_risposte[0])
         #break

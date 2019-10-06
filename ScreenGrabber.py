@@ -37,7 +37,6 @@ class ScreenGrab():
             return False
         if key == Key.f9:
             """Riprende le coordinate dell'ultima schermata catturata"""
-            print(self.cords)
             if self.cords:
                 self.key_pressed = 'F9'
                 return False
@@ -82,12 +81,15 @@ class ScreenGrab():
             inizio_domande = self.cords
             fine_risposte = [self.cords[0] + x, self.cords[1] + y]
             self.cords = inizio_domande + fine_risposte
+        return self.cords
 
     def is_messaggio_errore(self, punto):
         """Questa funzione utilizza un'immagine non tagliata del programma bluestacks"""
         #self.get_punto_msg_errore()
+        print('QUANTO COLORI?')
         print(punto)
         colore_centro_risp_errata = self.im.getpixel(punto)
+        print(colore_centro_risp_errata)
         if colore_centro_risp_errata == (53, 204, 252):
             print('RISPOSTA SBAGLIATA')
             #self.punto_corretto = self.punto[0], self.punto[1] + self.cords[1]
@@ -125,15 +127,3 @@ class ScreenGrab():
         #self.im2 = ImageGrab.grab(box2)
         #self.screenshot_name2 = (os.path.join(SCREEN_DIR, nome + str(int(time.time())) + 'copia.png'))
         #self.im2.save(self.screenshot_name2, 'PNG')
-
-    def screen_grab_solitario(self, nome=''):
-        box = tuple(self.cords)
-        if not nome:
-            nome = 'full_snap__'
-        self.screenshot_name = (os.path.join(SCREEN_DIR, nome + str(int(time.time())) + '.png'))
-        self.im = ImageGrab.grab(box)
-        print('Ho preso questo BOX')
-        print(box)
-
-    def salva_screen_grab(self):
-        self.im.save(self.screenshot_name, 'PNG')
