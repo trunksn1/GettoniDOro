@@ -42,7 +42,7 @@ class Punteggiatore():
             self.coord_click = ((0,0), (0,0), (0,0))
         self.dizionario_di_risposte_e_key_punteggi = {i: {
             '_d_R_': 0, '_dr_R_': 0, 'coord_click': self.coord_click[n]} for n, i in enumerate(self.lista_risposte)}
-        print(self.dizionario_di_risposte_e_key_punteggi)
+        #print(self.dizionario_di_risposte_e_key_punteggi)
 
 
     def download_site_preserva_html(self, url):

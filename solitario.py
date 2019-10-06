@@ -5,8 +5,9 @@ from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 from Sarto import Sarto
 from ScreenGrabber import ScreenGrab
-from cf import mult, y_inizio_domanda, tupla_coord_bottone_errore_screenshot
+from cf import mult, y_inizio_domanda
 from random import choice
+import pprint
 
 
     #TODO capisco dove si trova il quiz ed ottengo lo screenshot del quiz
@@ -221,7 +222,10 @@ if __name__ == '__main__':
         id = Identificatore(el.pezzi)
         pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda, lista_tuple_coord_risposte)
 
-        print(pp.dizionario_di_risposte_e_key_punteggi)
+        try:
+            pprint.pprint(pp.dizionario_di_risposte_e_key_punteggi)
+        except:
+            pass
         lista_risp_giusta = trova_risposta_esatta(pp.dizionario_di_risposte_e_key_punteggi, id.domanda)
 
         if len(lista_risp_giusta) > 1:
