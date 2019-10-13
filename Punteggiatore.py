@@ -59,8 +59,11 @@ class Punteggiatore():
             # Tutti i risultati sono al di sotto di un elemento: class='g'
             for g in soup.find_all(class_='g'):
                 # Adesso cerco diverse cose:
-                r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
-                st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
+                r = g.find(class_='LC20lb') # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                st = g.find(class_='st')  # racchiude il sunto del risultato
+
+                #r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                #st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
 
                 if st and r:
                     stringa = str(r) + '<br>' + str(st)
@@ -70,14 +73,14 @@ class Punteggiatore():
                     # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
                     s = g.find('div', attrs={
                         'class': 'Z0LcW'})  # contiene il trafiletto per catanzaro (ma sotto ha un'altra classe) e la sinossi del film rocknrolla (direttamente)
-                    if s:
+                    if r:
                         stringa = str(s)
                     else:
-                        s = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
-                        if not s:
+                        r = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
+                        if not r:
                             continue
                         else:
-                            stringa = str(s)
+                            stringa = str(r)
 
                 """Introdotto il 14/09 per velocizzare"""
                 esito, risultato = self.punti_dal_risultato(stringa, url)

@@ -61,3 +61,5 @@ class Identificatore():
         self.domanda_url = base_url + "{}".format(domanda_formattata_per_ricerca)
         # Indirizzo per domanda + risposte
         self.risp_url = base_url + query_url
+        print(self.domanda_url)
+        print(self.risp_url)
