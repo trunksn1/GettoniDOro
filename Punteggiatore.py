@@ -59,8 +59,9 @@ class Punteggiatore():
             # Tutti i risultati sono al di sotto di un elemento: class='g'
             for g in soup.find_all(class_='g'):
                 # Adesso cerco diverse cose:
-                r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
-                st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
+                r = g.find(class_='LC20lb')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                st = g.find(class_='st')  # racchiude il sunto del risultato
+                #st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
 
                 if st and r:
                     stringa = str(r) + '<br>' + str(st)
