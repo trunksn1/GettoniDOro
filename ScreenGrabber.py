@@ -11,15 +11,15 @@ from cf import x_finale, y_finale, SCREEN_DIR, RELABOR_DIR
 
 class ScreenGrab():
     """Oggetto deputato alla cattura dello schermo"""
-    def __init__(self):
-        # self.cords sarò una lista di 4 elementi.
+    def __init__(self, cords=[]):
+        # self.cords sarà una lista di 4 elementi.
         # I primi due sono x e y del punto in cui clicco.
         # Gli ultimi sono x e y calcolati grazie ai parametri che ho messo nel file cf.py
-        #self.cords = []
         if not os.path.isdir(SCREEN_DIR):
             os.makedirs(SCREEN_DIR)
         if not os.path.isdir(RELABOR_DIR):
             os.makedirs(RELABOR_DIR)
+        self.cords = cords
 
     def start_screen_grab(self):
         print('Premi F6 per indicare dove inizia la schermata da catturare\n'
@@ -59,7 +59,7 @@ class ScreenGrab():
             self.cords.extend([x, y])
             return False
 
-    def calcolo_spazi_domande_e_risposte(self,x=x_finale, y=y_finale):
+    def calcolo_spazi_domande_e_risposte(self, x=x_finale, y=y_finale):
         # Calcola dove si trovano i rettangoli della domanda e delle risposte
         # restituisce una lista che contiene tre liste
         # 0 coordinate domanda
@@ -68,14 +68,12 @@ class ScreenGrab():
 
         # self.cords all'inizio è una lista il cui unico elemento è una tupla con le coordinate del punto cliccato
         #inizio_domande = list(self.cords[0])
-        print('quante coordinate? ', len(self.cords))
         if len(self.cords) < 4:
             inizio_domande = self.cords
             fine_risposte = [self.cords[0] + x, self.cords[1] + y]
             self.cords = inizio_domande + fine_risposte
 
     def screen_grab(self, nome=''):
-        print('Prima del casino: ', self.cords)
         box = (self.cords)
         if not nome:
             nome = 'full_snap__'

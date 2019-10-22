@@ -23,6 +23,9 @@ def splitanswers(img):
       while flip !=1 :
         positions.append(num_pixel-i)
         flip = 1
+        # Aggiunto da Jacopo: tagliare il while appena possibile
+        if len(positions) == 6:
+          break
 
   #First six positions correspond to y pixels
   #of beggining and end of answers box

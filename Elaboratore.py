@@ -6,21 +6,19 @@ except ImportError:
 import os, time
 import cv2
 import numpy as np
-from cf import mult, SCREEN_DIR, RELABOR_DIR
+from cf import mult, SCREEN_DIR, RELABOR_DIR, taglio_x_sinistra, taglio_x_destra, taglio_y_rielab
 from splitanswers import splitanswers
 
 
 class Elaboratore():
     """Oggetto che prende lo screenshot e lo rielabora ottenendo alla fine 4 diverse immagini in bianco e nero 1 è la domandale altre tre sono le singole risposte"""
-    def __init__(self, screenshot_name):#, coords):
+    def __init__(self, screenshot_name):
         self.screenshot_name = screenshot_name
-        #self.cords = coords
         self.perfeziona_immagine()
         print('ELABORIAMO:')
         print(self.screenshot_name)
-        #print(self.img)
         self.get_all_cords()
-        self.salva_i_pezzi()
+        #self.salva_i_pezzi()
 
 
     def perfeziona_immagine(self):
@@ -31,7 +29,6 @@ class Elaboratore():
         height, width = self.img.shape[:2]
         print("Pre misure: ")
         print(height, width)
-
 
         # aumenta le dimensioni dell'immagine
         self.img = cv2.resize(self.img, None, fx=mult, fy=mult, interpolation=cv2.INTER_CUBIC)
@@ -53,20 +50,11 @@ class Elaboratore():
         # Trovato in https://stackoverflow.com/questions/45549963/how-to-improve-text-extraction-from-an-image
         # img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 2)
 
-        nome_f = os.path.join(RELABOR_DIR, 'Rielabor__' + os.path.basename(self.screenshot_name))
-        print(self.screenshot_name)
-        print(nome_f)
-
-
-        cv2.imwrite(nome_f, self.img)
-        """
-        if 'risposta' in os.path.basename(filename):
-            nome_risposta_invertita = RELABOR_DIR + f'\\Rielabor__Invertito' + os.path.basename(filename)
-            img = cv2.bitwise_not(img)
-            cv2.imwrite(nome_f, img)
-        
-        return img
-        """
+        # Questa cosa nn serve, tanto l'immagine rielaborata è nella variabile img
+        #nome_f = os.path.join(RELABOR_DIR, 'Rielabor__' + os.path.basename(self.screenshot_name))
+        #print(self.screenshot_name)
+        #print(nome_f)
+        #cv2.imwrite(nome_f, self.img)
 
 
     def get_all_cords(self):
@@ -74,28 +62,36 @@ class Elaboratore():
         y_risposte = splitanswers(self.img)
         print('FABRIZIO: ', y_risposte)
 
+        # Serve solo per assegnare all'oggetto le coordinate delle risposte dell'immagine elaborata
+        self.y = y_risposte
+
         # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
         print("punto y = ", y)
         print("punto x =", x)
 
         try:
-            self.cord_r1 = [120, y_risposte[5]+100, x-130, y_risposte[4]-100]
-            self.cord_r2 = [120, y_risposte[3]+100, x-130, y_risposte[2]-100]
-            self.cord_r3 = [120, y_risposte[1]+100, x-130, y_risposte[0]-100]
+            self.cord_r1 = [taglio_x_sinistra, y_risposte[5]+taglio_y_rielab, x-taglio_x_destra, y_risposte[4]-taglio_y_rielab]
+            self.cord_r2 = [taglio_x_sinistra, y_risposte[3]+taglio_y_rielab, x-taglio_x_destra, y_risposte[2]-taglio_y_rielab]
+            self.cord_r3 = [taglio_x_sinistra, y_risposte[1]+taglio_y_rielab, x-taglio_x_destra, y_risposte[0]-taglio_y_rielab]
             self.cord_d = [0, 0, x, y_risposte[5]]
         except IndexError:
+            print('Elaboratore: get_all_cords IndexError')
             self.cord_r1 = [0,0,0,0]
             self.cord_r2 = [0,0,0,0]
             self.cord_r3 = [0,0,0,0]
-            self.cord_d = [0, 0, x, y_risposte[5]]
+            try:
+                self.cord_d = [0, 0, x, y_risposte[5]]
+            except IndexError:
+                self.cord_d = [0, 0, 0, 0]
+
 
         self.cords = [self.cord_d] + [self.cord_r1] + [self.cord_r2] + [self.cord_r3]
 
 
     def salva_i_pezzi(self):
-        # Partendo dall'immagine elaborata e dalla lista di coordinate, salvo singolarmente le immagini della domanda
-        # e le immagini delle 3 risposte
+        # Input: immagine elaborata e lista di coordinate delle risposte
+        # Output: salvo singolarmente le immagini della domanda e delle 3 risposte
         self.pezzi = []
 
         for n, cord in enumerate(self.cords):

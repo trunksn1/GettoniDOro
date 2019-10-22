@@ -1,21 +1,11 @@
 import os
-if (os.name=='posix'):
-    SCREEN_DIR = os.path.join(os.getcwd(), 'screenshot/')
-    TEST_DIR = os.path.join(os.getcwd(), 'test/')
-    RELABOR_DIR = os.path.join(os.getcwd(), 'rielaborazioni/')
-    TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates/')
-    CSS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static', 'main.css')
-    PATH_INSTALLAZIONE_TESSERACT = ('/usr/local/bin/tesseract')
-    CHROME = os.path.join('Applications','Google Chrome.app','Contents','MacOS','Google  Chrome')
-else:
-    SCREEN_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'screenshot')
-    TEST_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test')
-    RELABOR_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'rielaborazioni')
-    TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
-    CSS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static', 'main.css')
-    PATH_INSTALLAZIONE_TESSERACT = r'E:\Tesseract-OCR\tesseract.exe'
-    CHROME = os.path.join('C:\\', 'Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe')
-    WEBDRIVER_PATH = os.path.join('C:\\', 'Program Files (x86)', 'ChromeDriverForSelenium', 'chromedriver.exe')
+
+SCREEN_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'screenshot')
+TEST_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test')
+RELABOR_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'rielaborazioni')
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
+CSS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static', 'main.css')
+
 
 
 USER_AGENT = {
@@ -25,13 +15,23 @@ USER_AGENT = {
 # Moltiplicatore per Resize dell'immagine
 mult = 5
 
-# Dimensione dello screen grab
+### Valido per Screenshot presi attraverso SideSync (Samsung Galaxy S6+)
+### Dimensione dello screen grab
+#x_finale = 500
+#y_finale = 500
+#taglio_x_sinistra = 120
+#taglio_x_destra = 130
+#taglio_y_rielab = 100
+
+# Valido per Screeshot presi attraverso BlueStacks (sul pc di Milano) con risoluzione impostata a 960x540
 x_finale = 500
-y_finale = 500
+y_finale = 550
+taglio_x_sinistra = 180
+taglio_x_destra = 170
+taglio_y_rielab = 100
 
 #Dimensione dello screen grab x Domande
 y_finale_domande = 140
-
 #Dimensione dello screen grab x Risposte
 y_iniziale_risposte = 165
 y_finale_risposte = 320
