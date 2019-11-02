@@ -27,6 +27,7 @@ while True:
     el = Elaboratore(screen_grabber.screenshot_name)
     el.salva_i_pezzi()
     id = Identificatore(el.pezzi)
+    #id.prepara_url_da_ricercare(id.domanda, id.risposte)
     pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
 
     print(pp.dizionario_di_risposte_e_key_punteggi)

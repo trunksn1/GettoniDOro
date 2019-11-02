@@ -57,6 +57,56 @@ class Elaboratore():
         #print(nome_f)
         #cv2.imwrite(nome_f, self.img)
 
+    def perfeziona_immagine2_test(self):
+        """Va fatta dopo avere diviso le immagini di domande e risposte"""
+        # Apre l'immagine con CV2
+        self.img = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
+
+        height, width = self.img.shape[:2]
+        print("Pre misure: ")
+        print(height, width)
+        mult=5
+
+        self.img = cv2.resize(self.img, None, fx=mult, fy=mult)
+        cv2.imshow("Primo", self.img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # aumenta le dimensioni dell'immagine
+        #self.img = cv2.resize(self.img, None, fx=1, fy=1, interpolation=cv2.INTER_CUBIC)
+        cv2.imshow("Primo", self.img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
+
+        # Convert to gray
+        self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+        cv2.imshow("Primo", self.img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # Apply dilation and erosion to remove some noise
+        kernel = np.ones((1, 1), np.uint8)
+        self.img = cv2.dilate(self.img, kernel, iterations=1)
+        self.img = cv2.erode(self.img, kernel, iterations=1)
+        cv2.imshow("TER", self.img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # Apply blur to smooth out the edges
+        #self.img = cv2.GaussianBlur(self.img, (5, 5), 0)
+
+        # Apply threshold to get image with only b&w (binarization)
+        self.img = cv2.threshold(self.img, 10, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        cv2.imshow("FIVE", self.img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        #edges = cv2.Canny(self.img, 100, 200)
+        #self.img_new = Image.fromarray(edges)
+        #self.img_new.show()
+
 
     def get_all_cords(self):
         # Chiamo la funzione di fabrizio per avere le coordinate delle ordinate delle risposte dell'immagine elaborata

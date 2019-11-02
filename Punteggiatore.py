@@ -7,6 +7,9 @@ import threading
 import pprint, time
 import webbrowser
 from jinja2 import Environment, FileSystemLoader
+from gazpacho import Soup, get
+import sys
+
 
 
 class Punteggiatore():
@@ -56,8 +59,43 @@ class Punteggiatore():
             lista_riscontri = []
             lista_non_riscontri = []
 
+            for special in soup.find_all(class_='ifM9O'):
+                if not special:
+                    break
+                resp = special.find(class_='Z0LcW')
+                #sito_fonte = special.find(class_='LC20lb')
+
+                if resp:
+                    text = special.find('span', attrs={'class': 'e24Kjd'})
+                    stringa = str(resp) + '<br>' + str(text)  # + '<br>' + str(sito_fonte)
+                elif not resp:
+                    # Questo è lo snippet generato da google che contiene una descrizione ed alcune informazioni in tab
+                    # esempio https://www.google.com/search?q=Il+Regno+delle+Due+Sicilie+%C3%A8+stato+istituito:
+                    snipp_tit = special.find(class_='SPZz6b')
+                    snipp_text = special.find(class_='i4J0ge')
+                    if snipp_tit:
+                        stringa = str(snipp_tit) + '<br>' + str(snipp_text)
+                    else:
+                        break
+
+
+                esito, risultato = self.punti_dal_risultato(stringa, url)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+
             # Tutti i risultati sono al di sotto di un elemento: class='g'
-            for g in soup.find_all(class_='g'):
+
+            for g in soup.find_all(class_='rc'):
+                #for disc in g.descendants:
+                #    print('name: ', disc.name)
+                    #print('class: ', disc.get('class', '') )
+                #    if disc.name == 'h3' and disc.get('class', '') == 'LC20lb':
+                #        string = disc.text
+                #        print(string)
+                #print('fine')
+                #input()
                 # Adesso cerco diverse cose:
                 r = g.find(class_='LC20lb') # contiene il titolo del risultato (senza l'url che sta in altra classe)
                 st = g.find(class_='st')  # racchiude il sunto del risultato
@@ -71,12 +109,67 @@ class Punteggiatore():
                 # Quando hai i box dei risultati, sotto la classe 'g' non trovi invece le classi r o st
                 elif not st or not r:
                     # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
-                    s = g.find('div', attrs={
+                    r = g.find('div', attrs={
                         'class': 'Z0LcW'})  # contiene il trafiletto per catanzaro (ma sotto ha un'altra classe) e la sinossi del film rocknrolla (direttamente)
+                    if r:   # sicuro che non sia if s: ??
+                        stringa = str(r)
+                    else:
+                        r = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
+                        if r:
+                            stringa = str(r)
+                        else:
+                            r = g.find('span', attrs={'class': 'Z0LcW'})
+                            if r:
+                                stringa = str(r)
+                            else:
+                                continue
+
+
+
+                """Introdotto il 14/09 per velocizzare"""
+                esito, risultato = self.punti_dal_risultato(stringa, url)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+            return lista_riscontri + lista_non_riscontri
+
+            ### Vecchio metodo
+            #    risultato.append(stringa)
+            #return risultato
+
+    def download_site_preserva_html_gazpacho (self, url):
+        # Tenta di guardare anche nei box di google
+        session = requests.Session()
+        risultato = []
+        with session.get(url, headers=USER_AGENT) as r:
+            r.raise_for_status()
+            html_doc = r.text
+            soup = Soup(html_doc)
+            lista_riscontri = []
+            lista_non_riscontri = []
+
+            # Tutti i risultati sono al di sotto di un elemento: class='g'
+            for g in soup.find('div', {'class':'g'}, mode='all', strict=True):
+                print(g)
+                # Adesso cerco diverse cose:
+                r = g.find('div', {'class':'LC20lb'}) # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                st = g.find('div', {'class':'st'})  # racchiude il sunto del risultato
+
+                #r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                #st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
+
+                if st and r:
+                    stringa = str(r) + '<br>' + str(st)
+
+                # Quando hai i box dei risultati, sotto la classe 'g' non trovi invece le classi r o st
+                elif not st or not r:
+                    # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
+                    s = g.find('div', {'class': 'Z0LcW'})  # contiene il trafiletto per catanzaro (ma sotto ha un'altra classe) e la sinossi del film rocknrolla (direttamente)
                     if r:
                         stringa = str(s)
                     else:
-                        r = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
+                        r = g.find('span', {'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
                         if not r:
                             continue
                         else:
@@ -90,9 +183,6 @@ class Punteggiatore():
                     lista_non_riscontri.append(risultato)
             return lista_riscontri + lista_non_riscontri
 
-            ### Vecchio metodo
-            #    risultato.append(stringa)
-            #return risultato
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
@@ -152,8 +242,9 @@ class Punteggiatore():
         # non volendo più usare la gui questo dizionario mi è inutile. conservo lo scritto a futura memoria.
 
 
-    def punti_dal_risultato(self, risultato, url):
+    def punti_dal_risultato(self, risultato, url, mult=1):
     #Rispetto alla vecchia implementazione analizzo subito la stringa dei risultati di google per tagliare dei cicli for
+    # Il parametro mult serve per dare più peso ai risultati che arrivano da alcune fonti (es: caselle speciali)
         if url == self.lista_url[0]: #ovvero se l'url è lo stesso url della query per la sola domanda su google
             key = '_d_R_'
         else:
@@ -173,7 +264,7 @@ class Punteggiatore():
                 # 1)Se trovo una isposta nel risultat la evidenzio nell'HTML
                 risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato + len(risposta):]
                 # 2) Aggiorno il punteggio
-                self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
+                self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1 * mult
                 trovato = True
 
         return trovato, risultato
