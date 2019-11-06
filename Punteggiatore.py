@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from cf import USER_AGENT, TEMPLATE_DIR, CSS_DIR
 import concurrent.futures
@@ -7,6 +7,9 @@ import threading
 import pprint, time
 import webbrowser
 from jinja2 import Environment, FileSystemLoader
+from gazpacho import Soup, get
+import sys
+
 
 
 class Punteggiatore():
@@ -52,33 +55,141 @@ class Punteggiatore():
         with session.get(url, headers=USER_AGENT) as r:
             r.raise_for_status()
             html_doc = r.text
-            soup = BeautifulSoup(html_doc, 'html.parser')
+            strainer = SoupStrainer('div', attrs={'id': 'search'})
+            soup = BeautifulSoup(html_doc, 'lxml', parse_only=strainer)
+            #@soup = BeautifulSoup(html_doc, 'lxml') #'html.parser')
             lista_riscontri = []
             lista_non_riscontri = []
 
-            # Tutti i risultati sono al di sotto di un elemento: class='g'
+            stringa = ''
+            resp = soup.find(class_='Z0LcW')
+            snipp_text = soup.find(class_='i4J0ge')
+            if resp:
+                # text = special.find('span', attrs={'class': 'e24Kjd'})
+                text = soup.find(class_='e24Kjd')
+                stringa = str(resp) + '<br>' + str(text)  # + '<br>' + str(sito_fonte)
+
+            if snipp_text:
+                snipp_tit = soup.find(class_='SPZz6b')
+                stringa = str(snipp_tit) + '<br>' + str(snipp_text)
+
+            if not resp and not snipp_text:  # Questo snippet è quello estratto da wikipedia: mancherà il titolo tuttavia
+                # https://www.google.com/search?q=Chi+tenne+il+discorso+%22|+have+a+dream%22?
+                text = soup.find(class_='e24Kjd')
+                if text:
+                    stringa = str(text)
+
+                else:  # Quando escono estratti di liste
+                    # https://www.google.com/search?q=Qual+%C3%A8+l%27isola+pi%C3%B9+grande+d%27Italia?
+                    geo = soup.find(class_='i8Z77e')
+                    if geo:
+                        stringa = str(geo)
+                    else:
+                        mappa = soup.find(class_="desktop-title-content")
+                        if mappa:
+                            res = soup.find(class_="desktop-title-subcontent")
+                            stringa = str(mappa) + '<br>' + str(res)
+
+            if stringa:
+                esito, risultato = self.punti_dal_risultato(stringa, url, 3)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+
+            """
+            for special in soup.find_all(class_='ifM9O'):
+                if not special:
+                    mappa = soup.find(class_="desktop-title-content")
+                    if mappa:
+                        res = soup.find(class_="desktop-title-subcontent")
+                        stringa = str(mappa) + '<br>' + str(res)
+                    else:
+                        break
+                resp = special.find(class_='Z0LcW') # Questo è per trovare le risposte secche: fondazione imperi, dove gioca ribery
+                #sito_fonte = special.find(class_='LC20lb')
+
+                if resp:
+                    #text = special.find('span', attrs={'class': 'e24Kjd'})
+                    text = special.find(class_ = 'e24Kjd')
+                    stringa = str(resp) + '<br>' + str(text)  # + '<br>' + str(sito_fonte)
+                    print("Special1")
+                    print(stringa)
+                elif not resp:
+                    # Questo è lo snippet generato da google che contiene una descrizione ed alcune informazioni in tab
+                    # esempio https://www.google.com/search?q=Il+Regno+delle+Due+Sicilie+%C3%A8+stato+istituito:
+
+                    snipp_text = special.find(class_='i4J0ge')
+                    if snipp_text:
+                        snipp_tit = special.find(class_='SPZz6b')
+                        stringa = str(snipp_tit) + '<br>' + str(snipp_text)
+                        print("Special2")
+                        print(stringa)
+                    elif not snipp_text:    # Questo snippet è quello estratto da wikipedia: mancherà il titolo tuttavia
+                        # https://www.google.com/search?q=Chi+tenne+il+discorso+%22|+have+a+dream%22?
+                        text = special.find(class_='e24Kjd')
+                        if text:
+                            stringa = str(text)
+
+                        else:   # Quando escono estratti di liste
+                            # https://www.google.com/search?q=Qual+%C3%A8+l%27isola+pi%C3%B9+grande+d%27Italia?
+                            geo = special.find(class_='i8Z77e')
+                            if geo:
+                                stringa = str(geo)
+                            else:
+                                break
+
+                esito, risultato = self.punti_dal_risultato(stringa, url, 3)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+                """
+
+
+            # Tutti i risultati SEMPLICI sono al di sotto di un elemento: class='g'
             for g in soup.find_all(class_='g'):
+                #for disc in g.descendants:
+                #    print('name: ', disc.name)
+                    #print('class: ', disc.get('class', '') )
+                #    if disc.name == 'h3' and disc.get('class', '') == 'LC20lb':
+                #        string = disc.text
+                #        print(string)
+                #print('fine')
+                #input()
                 # Adesso cerco diverse cose:
-                r = g.find(class_='LC20lb')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+
+                r = g.find(class_='LC20lb') # contiene il titolo del risultato (senza l'url che sta in altra classe)
                 st = g.find(class_='st')  # racchiude il sunto del risultato
+
+                #r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+
                 #st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
 
                 if st and r:
                     stringa = str(r) + '<br>' + str(st)
-
+                else: continue
+                """ Questi sono i casi speciali di cui ci siamo rotti i coglioni sopra
                 # Quando hai i box dei risultati, sotto la classe 'g' non trovi invece le classi r o st
                 elif not st or not r:
                     # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
-                    s = g.find('div', attrs={
+                    r = g.find('div', attrs={
                         'class': 'Z0LcW'})  # contiene il trafiletto per catanzaro (ma sotto ha un'altra classe) e la sinossi del film rocknrolla (direttamente)
-                    if s:
-                        stringa = str(s)
+                    if r:   # sicuro che non sia if s: ??
+                        stringa = str(r)
                     else:
-                        s = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
-                        if not s:
-                            continue
+                        r = g.find('span', attrs={'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
+                        if r:
+                            stringa = str(r)
                         else:
-                            stringa = str(s)
+                            r = g.find('span', attrs={'class': 'Z0LcW'})
+                            if r:
+                                stringa = str(r)
+                            else:
+                                continue
+                """
+
+
 
                 """Introdotto il 14/09 per velocizzare"""
                 esito, risultato = self.punti_dal_risultato(stringa, url)
@@ -91,6 +202,52 @@ class Punteggiatore():
             ### Vecchio metodo
             #    risultato.append(stringa)
             #return risultato
+
+    def download_site_preserva_html_gazpacho (self, url):
+        # Tenta di guardare anche nei box di google
+        session = requests.Session()
+        risultato = []
+        with session.get(url, headers=USER_AGENT) as r:
+            r.raise_for_status()
+            html_doc = r.text
+            soup = Soup(html_doc)
+            lista_riscontri = []
+            lista_non_riscontri = []
+
+            # Tutti i risultati sono al di sotto di un elemento: class='g'
+            for g in soup.find('div', {'class':'g'}, mode='all', strict=True):
+                print(g)
+                # Adesso cerco diverse cose:
+                r = g.find('div', {'class':'LC20lb'}) # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                st = g.find('div', {'class':'st'})  # racchiude il sunto del risultato
+
+                #r = g.find(class_='ellip')  # contiene il titolo del risultato (senza l'url che sta in altra classe)
+                #st = g.find('span', attrs={'class': 'st'})  # racchiude il sunto del risultato
+
+                if st and r:
+                    stringa = str(r) + '<br>' + str(st)
+
+                # Quando hai i box dei risultati, sotto la classe 'g' non trovi invece le classi r o st
+                elif not st or not r:
+                    # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
+                    s = g.find('div', {'class': 'Z0LcW'})  # contiene il trafiletto per catanzaro (ma sotto ha un'altra classe) e la sinossi del film rocknrolla (direttamente)
+                    if r:
+                        stringa = str(s)
+                    else:
+                        r = g.find('span', {'class': 'e24Kjd'})  # c'è il trafiletto di wikipedia, ed alcuni sunti vari
+                        if not r:
+                            continue
+                        else:
+                            stringa = str(r)
+
+                """Introdotto il 14/09 per velocizzare"""
+                esito, risultato = self.punti_dal_risultato(stringa, url)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+            return lista_riscontri + lista_non_riscontri
+
 
     def download_all_sites(self, sites):
         # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
@@ -150,8 +307,9 @@ class Punteggiatore():
         # non volendo più usare la gui questo dizionario mi è inutile. conservo lo scritto a futura memoria.
 
 
-    def punti_dal_risultato(self, risultato, url):
+    def punti_dal_risultato(self, risultato, url, mult=1):
     #Rispetto alla vecchia implementazione analizzo subito la stringa dei risultati di google per tagliare dei cicli for
+    # Il parametro mult serve per dare più peso ai risultati che arrivano da alcune fonti (es: caselle speciali)
         if url == self.lista_url[0]: #ovvero se l'url è lo stesso url della query per la sola domanda su google
             key = '_d_R_'
         else:
@@ -171,7 +329,7 @@ class Punteggiatore():
                 # 1)Se trovo una isposta nel risultat la evidenzio nell'HTML
                 risultato = risultato[:index_risultato] + '<b>{}</b>'.format(risposta) + risultato[index_risultato + len(risposta):]
                 # 2) Aggiorno il punteggio
-                self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1
+                self.dizionario_di_risposte_e_key_punteggi[risposta][key] += 1 * mult
                 trovato = True
 
         return trovato, risultato

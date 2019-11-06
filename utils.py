@@ -2,22 +2,28 @@
 import cv2, os, glob
 import csv
 import numpy as np
-from collections import defaultdict
-from cf import SCREEN_DIR, USER_AGENT
+from collections import defaultdict, Counter
+from cf import SCREEN_DIR, USER_AGENT, BASE_DIR
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
-from Guiatore import Guiatore
+import sqlite3 as sql3
+import string
+
 from bs4 import BeautifulSoup
 import requests, time
 import nltk
 from nltk import word_tokenize
 import pprint, threading
-import PySimpleGUI as sg
+import shutil
+
+
+
 from nltk.corpus import stopwords
 
 PATH_SEPARATE = os.path.join(SCREEN_DIR, 'da_concatenare')
 PATH_CONCATENATE = os.path.join(SCREEN_DIR, 'concatenate')
+PATH_DOM_BLUE = os.path.join(SCREEN_DIR, 'Domande BlueStacks')
 PATH_DOM_RSP = os.path.join(SCREEN_DIR, 'Domande_Risposte')
 print(PATH_SEPARATE)
 print(PATH_CONCATENATE)
@@ -43,7 +49,8 @@ def aggancia_dom_e_risp():
         # Prese le immagini le concateno l'una sopra l'altra (axis 0)
         vis = np.concatenate((dom1, ris1), axis=0)
 
-        cv2.imwrite('out{}.png'.format(n), vis)
+        cv2.imwrite('out{}.png'.format(n+500), vis)
+        print('fatto')
 
 def diario():
     immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
@@ -70,17 +77,23 @@ def diario_csv():
     immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
     with open(os.path.join(PATH_DOM_RSP, 'diario.csv'), 'w') as log:
         for n, immagine in enumerate(immagini_da_studiare):
-            if n == 10:
-                break
+            #if n == 10:
+            #    break
+            print(immagine)
             try:
                 scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 print(immagine)
                 drivers = ''
                 el = Elaboratore(immagine)
+                el.salva_i_pezzi()
                 id = Identificatore(el.pezzi)
+                id.prepara_url_da_ricercare(id.domanda, id.risposte)
                 pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
-                print('Thread attivi: ', end='')
-                print(threading.active_count())
+                #print('Thread attivi: ', end='')
+                #print(threading.active_count())
+
+
+
                 #win = Guiatore(id.risposte, [id.domanda_url, id.risp_url], drivers, pp.risultati_soup_google)
                 #win.crea_layout_per_gui(pp.dizionario_di_risposte_e_punteggi)
                 #win.crea_layout_per_gui(pp.dizionario_di_risposte_e_key_punteggi)
@@ -89,18 +102,20 @@ def diario_csv():
                 print(mess)
                 print(id.domanda)
                 print(id.risposte)
-                print(pp.punteggi)
+                print(pp.dizionario_di_risposte_e_key_punteggi)
                 scrivente.writerow([])
                 scrivente.writerow([mess, '****', '****', '****'])
                 scrivente.writerow([id.domanda, 'SoloD', '+Risp', 'TOT'])
                 for i in range(3):
-                    scrivente.writerow([id.risposte[i], pp.punteggi[0][id.risposte[i]], pp.punteggi[1][id.risposte[i]], pp.punteggi[2][id.risposte[i]]])
+                    scrivente.writerow([id.risposte[i], pp.dizionario_di_risposte_e_key_punteggi[id.risposte[i]]['_d_R_'], pp.dizionario_di_risposte_e_key_punteggi[id.risposte[i]]['_dr_R_'],
+                                        pp.dizionario_di_risposte_e_key_punteggi[id.risposte[i]]['_d_R_'] + pp.dizionario_di_risposte_e_key_punteggi[id.risposte[i]]['_dr_R_']])
             except AttributeError:
                 print(immagine, 'AttributeErrr')
                 continue
             except IndexError:
                 print(immagine, 'IndexError')
                 continue
+            time.sleep(5)
 
 
 
@@ -243,9 +258,198 @@ def trova_risposta(query, lista_risposte):
     #    if True:
     #        pass
 
+def ottieni_database():
+    db_file = os.path.join(SCREEN_DIR,  'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    """Verifica che il database abbia la sue tabelle, altrimenti le crea"""
+    try:
+        # cerca la tabella file_salvati nel database
+        db.execute("SELECT * FROM Domande")
+        print("Database già esistente, da aggiornare")
+    except:
+        # crea le tabelle nel database
+        print("Database da creare!")
+        db.execute(
+            'CREATE TABLE "Domande" ( `ID` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `Domanda` TEXT NOT NULL, `Immagine` TEXT UNIQUE, `Categoria` TEXT, `Keyword` TEXT, `Problema` TEXT  )')
+        db.execute(
+            'CREATE TABLE `Risposte` ( `ID` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `Risposta` TEXT, `RispCorretta` INTEGER, `IDDomanda` INTEGER NOT NULL, `PtiDom` INTEGER, `PtiDomRisp` INTEGER, `PtiTot` INTEGER   )')
+        db.execute(
+            'CREATE TABLE `RispDom` ( `IDRisp` INTEGER NOT NULL UNIQUE, `IDDom` INTEGER NOT NULL )')
+        db.execute(
+            'CREATE TABLE `Links_Google` ( `SoloDom` TEXT NOT NULL, `DomRisp` TEXT NOT NULL, `IDDom` INTEGER NOT NULL )')
+    return db
+
+def popola_database(db, cursore, domanda, immagine, risposte, dict_pti, linkDom, linkDomRisp):
+    """Popola il database"""
+    try:
+        cursore.execute('SELECT ID FROM Domande WHERE Domanda=?', (str(domanda),))
+    except sql3.IntegrityError:
+        print("Domanda, già presente nel database")
+        return
+    else:
+        domanda = " ".join(domanda.split("\n"))
+        print("aggiungo domanda al database")
+        cursore.execute('INSERT INTO Domande(Domanda, Immagine) VALUES(?,?)',
+                        (str(domanda), str(immagine)))
+        db.commit()
+
+    #cursore.execute('SELECT ID FROM Domande WHERE Domanda=?', (str(domanda),))
+    cursore.execute('SELECT max(ID) FROM Domande')
+    id_domanda = cursore.fetchone()[0]
+
+    for i, risposta in enumerate(risposte):
+        risposta = " ".join(risposta.split("\n"))
+        cursore.execute('INSERT INTO Risposte(Risposta, IDDomanda, PtiDom, PtiDomRisp, PtiTot ) VALUES(?,?,?,?,?)',
+                        (str(risposta), id_domanda,
+                         int(dict_pti[risposte[i]]['_d_R_']),
+                         int(dict_pti[risposte[i]]['_dr_R_']),
+                         int(dict_pti[risposte[i]]['_d_R_']) + int(dict_pti[risposte[i]]['_dr_R_'])))
+        db.commit()
+
+        cursore.execute('SELECT ID FROM Risposte WHERE Risposta=?', (str(risposta),))
+        id_risp = cursore.fetchone()[0]
+
+        cursore.execute('INSERT INTO RispDom(IDRisp, IDDom) VALUES(?,?)',
+                        (id_risp, id_domanda))
+        db.commit()
+
+    cursore.execute('INSERT INTO Links_Google(SoloDom, DomRisp, IDDom) VALUES(?,?,?)',
+                    (str(linkDom), str(linkDomRisp), id_domanda))
+    db.commit()
+    return False
+
+def lavora_database():
+    db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    cursore = db.cursor()
+    domande = db.execute("SELECT Domanda FROM Domande")
+    for n, d in enumerate(domande, 1):
+        #d = " ".join(d[0].split("\n"))
+        #db.execute("UPDATE Domande SET Domanda = ? WHERE ID = ?", (d,n))
+        print(d[0])
+
+def istogramma_database():
+    db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    hist = dict()
+    domande = db.execute("SELECT Domanda FROM Domande")
+    for domanda in domande:
+        for d in domanda[0].split():
+            d = d.strip(string.punctuation + string.whitespace)
+            d = d.lower()
+            hist[d] = hist.get(d, 0) + 1
+    return hist
+
+def processa_istogramma_database():
+    h = istogramma_database()
+    with open(os.path.join(PATH_DOM_RSP, 'istogramma_domande.csv'), 'w', newline='') as log:
+        for k, v in h.items():
+            try:
+                scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                scrivente.writerow([k, v])
+            except:
+                print('Errore')
+
+def problemi_database_sposta_immagini():
+    db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    path_problematiche = os.path.join(SCREEN_DIR, 'PROBLEMATICHE')
+    path_p_identificazione = os.path.join(path_problematiche, 'Identificazione')
+    path_p_acquisizione = os.path.join(path_problematiche, 'Acquisizione')
+    path_p_risposte = os.path.join(path_problematiche, 'Mancate_Risposte')
+    if not os.path.isdir(path_problematiche):
+        os.makedirs(path_problematiche)
+        os.makedirs(path_p_identificazione)
+        os.makedirs(path_p_acquisizione)
+        os.makedirs(path_p_risposte)
+    hist = dict()
+    domande_immagini = db.execute("SELECT Immagine, Problema FROM Domande WHERE Problema IS NOT NULL")
+    risps = db.execute("SELECT IDDomanda, ID  FROM Risposte")
+    list_dom = []
+
+    # Serve per trovare nel db quelle domande in cui le risposte riconosciute non sono 3, ma sono di meno o di più
+    """
+    for n, tupla in enumerate(risps.fetchall()):
+        list_dom.append(tupla[0])
+    conta = Counter(list_dom)
+    print(conta)
+    for id in conta:
+        if conta[id] != 3:
+            query = "Update Domande SET Problema = ? where ID = ?"
+            data = ('Ric_Risposte', id)
+            db.execute(query, data)
+    """
+    # Fine
+
+    for d in domande_immagini:
+        img = d[0]
+        if d[1] == 'Identificazione':
+            path_destinazione = os.path.join(path_p_identificazione, os.path.basename(d[0]))
+            try:
+                shutil.move(d[0], os.path.join(path_p_identificazione, os.path.basename(d[0])))
+            except Exception as e:
+                print(e)
+        elif d[1] == 'Acquisizione':
+            path_destinazione = os.path.join(path_p_acquisizione, os.path.basename(d[0]))
+            try:
+                shutil.move(d[0], os.path.join(path_p_acquisizione, os.path.basename(d[0])))
+            except Exception as e:
+                print(e)
+        elif d[1] == 'Ric_Risposte':
+            path_destinazione = os.path.join(path_p_risposte, os.path.basename(d[0]))
+            try:
+                shutil.move(d[0], os.path.join(path_p_risposte, os.path.basename(d[0])))
+            except Exception as e:
+                print(e)
+        else:
+            continue
+        sql_update_query = """Update Domande SET Immagine = ? where Immagine = ?"""
+        data = (path_destinazione, img)
+
+        db.execute(sql_update_query, data)
+        db.commit()
+
+def main_database():
+    immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_BLUE, '*'), recursive=True) + glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
+    db = ottieni_database()
+    cursore = db.cursor()
+    for n, immagine in enumerate(immagini_da_studiare):
+
+        try:
+            el = Elaboratore(immagine)
+            el.salva_i_pezzi()
+            id = Identificatore(el.pezzi)
+            id.prepara_url_da_ricercare(id.domanda, id.risposte)
+            pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
+
+            #id.domanda = " ".join(id.domanda.split("\n"))
+            popola_database(db,
+                            cursore,
+                            id.domanda,
+                            immagine,
+                            id.risposte,
+                            pp.dizionario_di_risposte_e_key_punteggi,
+                            id.domanda_url,
+                            id.risp_url)
+
+
+        except Exception as e:
+            print(e)
+            continue
+        finally:
+            time.sleep(4)
+
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
-    diario_csv()
+    #diario_csv()
+    #main_database()
+    #lavora_database()
+    #processa_istogramma_database()
+    problemi_database_sposta_immagini()
     #nltk_prova()
     #scrape()
     #trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
@@ -258,8 +462,8 @@ if __name__ == '__main__':
         'https://www.google.com/search?&q=what+are+the+possible+box+in+a+google+search',
 
         ]
-    ris = download_site(urls[-1])
-    creatore_gui(ris)
+    #ris = download_site(urls[-1])
+    #creatore_gui(ris)
     #for url in urls:
     #    ris = download_site(url) #[0])
     #    creatore_gui(ris)
