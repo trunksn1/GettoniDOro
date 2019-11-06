@@ -6,6 +6,7 @@ except ImportError:
 from install_settings import PATH_INSTALLAZIONE_TESSERACT
 import pytesseract
 import threading
+from paroleparole import inutili
 
 
 class Identificatore():
@@ -23,7 +24,10 @@ class Identificatore():
             if n == 0:
                 self.domanda = self.ocr_core(img)
             else:
-                self.risposte.append(self.ocr_core(img))
+                # Se la prima parola della risposta è una parola inutile allora la rimuoviamo
+                r = self.pota_risposta(self.ocr_core(img))
+                #potata la risposta allora la inseriamo nella lista
+                self.risposte.append(r)
 
     def ocr_core(self, filename):
         """
@@ -65,3 +69,18 @@ class Identificatore():
         self.risp_url = base_url + query_url
         print(self.domanda_url)
         print(self.risp_url)
+
+    def pota_risposta(self, risp):
+        """
+        Input: Una soladelle 3 risposte
+        Output: Risposta potata di eventuali parole inutili all'inizio (come articoli o preposizioni)
+        """
+        r = risp.split()
+        if r[0].lower() in inutili:
+            r.pop(0)
+            s = " ".join(r)
+            print(s)
+            return s
+        else:
+            return risp
+

@@ -2,18 +2,22 @@
 import cv2, os, glob
 import csv
 import numpy as np
-from collections import defaultdict
-from cf import SCREEN_DIR, USER_AGENT
+from collections import defaultdict, Counter
+from cf import SCREEN_DIR, USER_AGENT, BASE_DIR
 from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 import sqlite3 as sql3
+import string
 
 from bs4 import BeautifulSoup
 import requests, time
 import nltk
 from nltk import word_tokenize
 import pprint, threading
+import shutil
+
+
 
 from nltk.corpus import stopwords
 
@@ -290,7 +294,8 @@ def popola_database(db, cursore, domanda, immagine, risposte, dict_pti, linkDom,
                         (str(domanda), str(immagine)))
         db.commit()
 
-    cursore.execute('SELECT ID FROM Domande WHERE Domanda=?', (str(domanda),))
+    #cursore.execute('SELECT ID FROM Domande WHERE Domanda=?', (str(domanda),))
+    cursore.execute('SELECT max(ID) FROM Domande')
     id_domanda = cursore.fetchone()[0]
 
     for i, risposta in enumerate(risposte):
@@ -325,7 +330,88 @@ def lavora_database():
         #db.execute("UPDATE Domande SET Domanda = ? WHERE ID = ?", (d,n))
         print(d[0])
 
+def istogramma_database():
+    db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    hist = dict()
+    domande = db.execute("SELECT Domanda FROM Domande")
+    for domanda in domande:
+        for d in domanda[0].split():
+            d = d.strip(string.punctuation + string.whitespace)
+            d = d.lower()
+            hist[d] = hist.get(d, 0) + 1
+    return hist
 
+def processa_istogramma_database():
+    h = istogramma_database()
+    with open(os.path.join(PATH_DOM_RSP, 'istogramma_domande.csv'), 'w', newline='') as log:
+        for k, v in h.items():
+            try:
+                scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                scrivente.writerow([k, v])
+            except:
+                print('Errore')
+
+def problemi_database_sposta_immagini():
+    db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    path_problematiche = os.path.join(SCREEN_DIR, 'PROBLEMATICHE')
+    path_p_identificazione = os.path.join(path_problematiche, 'Identificazione')
+    path_p_acquisizione = os.path.join(path_problematiche, 'Acquisizione')
+    path_p_risposte = os.path.join(path_problematiche, 'Mancate_Risposte')
+    if not os.path.isdir(path_problematiche):
+        os.makedirs(path_problematiche)
+        os.makedirs(path_p_identificazione)
+        os.makedirs(path_p_acquisizione)
+        os.makedirs(path_p_risposte)
+    hist = dict()
+    domande_immagini = db.execute("SELECT Immagine, Problema FROM Domande WHERE Problema IS NOT NULL")
+    risps = db.execute("SELECT IDDomanda, ID  FROM Risposte")
+    list_dom = []
+
+    # Serve per trovare nel db quelle domande in cui le risposte riconosciute non sono 3, ma sono di meno o di più
+    """
+    for n, tupla in enumerate(risps.fetchall()):
+        list_dom.append(tupla[0])
+    conta = Counter(list_dom)
+    print(conta)
+    for id in conta:
+        if conta[id] != 3:
+            query = "Update Domande SET Problema = ? where ID = ?"
+            data = ('Ric_Risposte', id)
+            db.execute(query, data)
+    """
+    # Fine
+
+    for d in domande_immagini:
+        img = d[0]
+        if d[1] == 'Identificazione':
+            path_destinazione = os.path.join(path_p_identificazione, os.path.basename(d[0]))
+            try:
+                shutil.move(d[0], os.path.join(path_p_identificazione, os.path.basename(d[0])))
+            except Exception as e:
+                print(e)
+        elif d[1] == 'Acquisizione':
+            path_destinazione = os.path.join(path_p_acquisizione, os.path.basename(d[0]))
+            try:
+                shutil.move(d[0], os.path.join(path_p_acquisizione, os.path.basename(d[0])))
+            except Exception as e:
+                print(e)
+        elif d[1] == 'Ric_Risposte':
+            path_destinazione = os.path.join(path_p_risposte, os.path.basename(d[0]))
+            try:
+                shutil.move(d[0], os.path.join(path_p_risposte, os.path.basename(d[0])))
+            except Exception as e:
+                print(e)
+        else:
+            continue
+        sql_update_query = """Update Domande SET Immagine = ? where Immagine = ?"""
+        data = (path_destinazione, img)
+
+        db.execute(sql_update_query, data)
+        db.commit()
 
 def main_database():
     immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_BLUE, '*'), recursive=True) + glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
@@ -358,10 +444,12 @@ def main_database():
             time.sleep(4)
 
 if __name__ == '__main__':
-    aggancia_dom_e_risp()
+    #aggancia_dom_e_risp()
     #diario_csv()
     #main_database()
     #lavora_database()
+    #processa_istogramma_database()
+    problemi_database_sposta_immagini()
     #nltk_prova()
     #scrape()
     #trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',

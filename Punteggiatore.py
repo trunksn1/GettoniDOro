@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 import requests
 from cf import USER_AGENT, TEMPLATE_DIR, CSS_DIR
 import concurrent.futures
@@ -55,39 +55,100 @@ class Punteggiatore():
         with session.get(url, headers=USER_AGENT) as r:
             r.raise_for_status()
             html_doc = r.text
-            soup = BeautifulSoup(html_doc, 'html.parser')
+            strainer = SoupStrainer('div', attrs={'id': 'search'})
+            soup = BeautifulSoup(html_doc, 'lxml', parse_only=strainer)
+            #@soup = BeautifulSoup(html_doc, 'lxml') #'html.parser')
             lista_riscontri = []
             lista_non_riscontri = []
 
-            for special in soup.find_all(class_='ifM9O'):
-                if not special:
-                    break
-                resp = special.find(class_='Z0LcW')
-                #sito_fonte = special.find(class_='LC20lb')
+            stringa = ''
+            resp = soup.find(class_='Z0LcW')
+            snipp_text = soup.find(class_='i4J0ge')
+            if resp:
+                # text = special.find('span', attrs={'class': 'e24Kjd'})
+                text = soup.find(class_='e24Kjd')
+                stringa = str(resp) + '<br>' + str(text)  # + '<br>' + str(sito_fonte)
 
-                if resp:
-                    text = special.find('span', attrs={'class': 'e24Kjd'})
-                    stringa = str(resp) + '<br>' + str(text)  # + '<br>' + str(sito_fonte)
-                elif not resp:
-                    # Questo è lo snippet generato da google che contiene una descrizione ed alcune informazioni in tab
-                    # esempio https://www.google.com/search?q=Il+Regno+delle+Due+Sicilie+%C3%A8+stato+istituito:
-                    snipp_tit = special.find(class_='SPZz6b')
-                    snipp_text = special.find(class_='i4J0ge')
-                    if snipp_tit:
-                        stringa = str(snipp_tit) + '<br>' + str(snipp_text)
+            if snipp_text:
+                snipp_tit = soup.find(class_='SPZz6b')
+                stringa = str(snipp_tit) + '<br>' + str(snipp_text)
+
+            if not resp and not snipp_text:  # Questo snippet è quello estratto da wikipedia: mancherà il titolo tuttavia
+                # https://www.google.com/search?q=Chi+tenne+il+discorso+%22|+have+a+dream%22?
+                text = soup.find(class_='e24Kjd')
+                if text:
+                    stringa = str(text)
+
+                else:  # Quando escono estratti di liste
+                    # https://www.google.com/search?q=Qual+%C3%A8+l%27isola+pi%C3%B9+grande+d%27Italia?
+                    geo = soup.find(class_='i8Z77e')
+                    if geo:
+                        stringa = str(geo)
                     else:
-                        break
+                        mappa = soup.find(class_="desktop-title-content")
+                        if mappa:
+                            res = soup.find(class_="desktop-title-subcontent")
+                            stringa = str(mappa) + '<br>' + str(res)
 
-
-                esito, risultato = self.punti_dal_risultato(stringa, url)
+            if stringa:
+                esito, risultato = self.punti_dal_risultato(stringa, url, 3)
                 if esito:
                     lista_riscontri.append(risultato)
                 else:
                     lista_non_riscontri.append(risultato)
 
-            # Tutti i risultati sono al di sotto di un elemento: class='g'
+            """
+            for special in soup.find_all(class_='ifM9O'):
+                if not special:
+                    mappa = soup.find(class_="desktop-title-content")
+                    if mappa:
+                        res = soup.find(class_="desktop-title-subcontent")
+                        stringa = str(mappa) + '<br>' + str(res)
+                    else:
+                        break
+                resp = special.find(class_='Z0LcW') # Questo è per trovare le risposte secche: fondazione imperi, dove gioca ribery
+                #sito_fonte = special.find(class_='LC20lb')
 
-            for g in soup.find_all(class_='rc'):
+                if resp:
+                    #text = special.find('span', attrs={'class': 'e24Kjd'})
+                    text = special.find(class_ = 'e24Kjd')
+                    stringa = str(resp) + '<br>' + str(text)  # + '<br>' + str(sito_fonte)
+                    print("Special1")
+                    print(stringa)
+                elif not resp:
+                    # Questo è lo snippet generato da google che contiene una descrizione ed alcune informazioni in tab
+                    # esempio https://www.google.com/search?q=Il+Regno+delle+Due+Sicilie+%C3%A8+stato+istituito:
+
+                    snipp_text = special.find(class_='i4J0ge')
+                    if snipp_text:
+                        snipp_tit = special.find(class_='SPZz6b')
+                        stringa = str(snipp_tit) + '<br>' + str(snipp_text)
+                        print("Special2")
+                        print(stringa)
+                    elif not snipp_text:    # Questo snippet è quello estratto da wikipedia: mancherà il titolo tuttavia
+                        # https://www.google.com/search?q=Chi+tenne+il+discorso+%22|+have+a+dream%22?
+                        text = special.find(class_='e24Kjd')
+                        if text:
+                            stringa = str(text)
+
+                        else:   # Quando escono estratti di liste
+                            # https://www.google.com/search?q=Qual+%C3%A8+l%27isola+pi%C3%B9+grande+d%27Italia?
+                            geo = special.find(class_='i8Z77e')
+                            if geo:
+                                stringa = str(geo)
+                            else:
+                                break
+
+                esito, risultato = self.punti_dal_risultato(stringa, url, 3)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+                """
+
+
+            # Tutti i risultati SEMPLICI sono al di sotto di un elemento: class='g'
+            for g in soup.find_all(class_='g'):
                 #for disc in g.descendants:
                 #    print('name: ', disc.name)
                     #print('class: ', disc.get('class', '') )
@@ -105,7 +166,8 @@ class Punteggiatore():
 
                 if st and r:
                     stringa = str(r) + '<br>' + str(st)
-
+                else: continue
+                """ Questi sono i casi speciali di cui ci siamo rotti i coglioni sopra
                 # Quando hai i box dei risultati, sotto la classe 'g' non trovi invece le classi r o st
                 elif not st or not r:
                     # Andiamo alla ricerca di eventuali box (infame capoluogo calabrese)
@@ -123,6 +185,7 @@ class Punteggiatore():
                                 stringa = str(r)
                             else:
                                 continue
+                """
 
 
 
