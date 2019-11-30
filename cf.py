@@ -1,4 +1,4 @@
-import os
+import os, re
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 SCREEN_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'screenshot')
@@ -12,6 +12,16 @@ CSS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static', 'm
 USER_AGENT = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36'
 }
+
+regex_patt_compilato = re.compile(r'''
+(?P<traquesti>(?:[Qq]ual.?)?(?:\D*?quest.))|                        # Cerca "Quale Tra questi"
+\b(?P<corse>Moto\s?[GPgp]+?|Formula\s(?:1|uno|Uno)|Gran\sPremio)\b| # cerca riferimenti alle gare di corsa
+(?P<bandiera>\bbandier.\b)|                                         # cerca bandiere
+(?P<prima>\bprim.|pi[uù] recente\b)|                                # Cerca riferimenti temporali
+(?P<keyw1>\b[A-Z][a-z]+\b)|                                         # Cerca parole inizianti con la maiuscola
+\"(?P<keyw2>.+?)\"                                                  # cerca frasi tra "virgolette"
+''', re.VERBOSE)
+
 
 # Moltiplicatore per Resize dell'immagine
 mult = 5

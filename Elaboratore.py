@@ -16,8 +16,8 @@ class Elaboratore():
         self.screenshot_name = screenshot_name
 
         self.perfeziona_immagine()
-        print('ELABORIAMO:')
-        print(self.screenshot_name)
+        #print('ELABORIAMO:')
+        #print(self.screenshot_name)
         self.get_all_cords()
         #self.salva_i_pezzi()
 
@@ -26,10 +26,9 @@ class Elaboratore():
         """Va fatta dopo avere diviso le immagini di domande e risposte"""
         # Apre l'immagine con CV2
         self.img = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
-
         height, width = self.img.shape[:2]
-        print("Pre misure: ")
-        print(height, width)
+        #print("Pre misure: ")
+        #print(height, width)
 
         # aumenta le dimensioni dell'immagine
         self.img = cv2.resize(self.img, None, fx=mult, fy=mult, interpolation=cv2.INTER_CUBIC)
@@ -63,8 +62,8 @@ class Elaboratore():
         self.img = cv2.imread(os.path.join(SCREEN_DIR, self.screenshot_name))
 
         height, width = self.img.shape[:2]
-        print("Pre misure: ")
-        print(height, width)
+        #print("Pre misure: ")
+        #print(height, width)
         mult=5
 
         self.img = cv2.resize(self.img, None, fx=mult, fy=mult)
@@ -112,7 +111,7 @@ class Elaboratore():
         # Chiamo la funzione di fabrizio per avere le coordinate delle ordinate delle risposte dell'immagine elaborata
         y_risposte = splitanswers(self.img)
         self.y = y_risposte
-        print('FABRIZIO: ', y_risposte)
+        #print('FABRIZIO: ', y_risposte)
 
         # Controllo subito di avere le coordinate sufficienti dall'immagine rielaborata
         #if not self.are_valid_coords_for_risposte(y_risposte):
@@ -121,8 +120,8 @@ class Elaboratore():
 
         # quanto è grande l'immagine (x e y sono coordinate del punto finale posto in basso a destra)
         y, x = self.img.shape[:2]
-        print("punto y = ", y)
-        print("punto x =", x)
+        #print("punto y = ", y)
+        #print("punto x =", x)
 
         try:
             self.cord_r1 = [taglio_x_sinistra, y_risposte[5]+taglio_y_rielab, x-taglio_x_destra, y_risposte[4]-taglio_y_rielab]
@@ -169,8 +168,8 @@ class Elaboratore():
             else:
                 screenshot_name = os.path.join(SCREEN_DIR, 'risposta_{}__'.format(n) + str(int(time.time())) + '.png')
 
-            print(cord)
-            print(screenshot_name)
+            #print(cord)
+            #print(screenshot_name)
             self.pezzi.append(screenshot_name)
 
             # Salva lo screenshot

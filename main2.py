@@ -4,7 +4,8 @@ from Elaboratore import Elaboratore
 from Identificatore import Identificatore
 from Punteggiatore import Punteggiatore
 #from Guiatore import Guiatore
-import time
+from cf import regex_patt_compilato
+
 
 
 
@@ -12,6 +13,7 @@ import time
 #TODO: controllare se nel file install_settings c'è il percorso di PyTesseract, se non c'è ottienilo (via GUI)
 screen_grabber = ScreenGrab()
 cords = ()
+
 while True:
 
     print('INIZIO GRAB')
@@ -27,8 +29,9 @@ while True:
     el = Elaboratore(screen_grabber.screenshot_name)
     el.salva_i_pezzi()
     id = Identificatore(el.pezzi)
-    #id.prepara_url_da_ricercare(id.domanda, id.risposte)
-    pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
+    id.prepara_url_da_ricercare(id.domanda, id.risposte)
+
+    pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)#, regex_patt_compilato)
 
     print(pp.dizionario_di_risposte_e_key_punteggi)
     pp.rendo_template_html()

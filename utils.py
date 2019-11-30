@@ -17,6 +17,8 @@ from nltk import word_tokenize
 import pprint, threading
 import shutil
 
+from paroleparole import inutili
+
 
 
 from nltk.corpus import stopwords
@@ -280,19 +282,31 @@ def ottieni_database():
             'CREATE TABLE `Links_Google` ( `SoloDom` TEXT NOT NULL, `DomRisp` TEXT NOT NULL, `IDDom` INTEGER NOT NULL )')
     return db
 
+def is_doppione(db, cursore, immagine, domanda):
+    try:
+        cursore.execute('SELECT ID FROM Domande WHERE Immagine=? or Domanda=?', (str(immagine), str(domanda)))
+        x = cursore.fetchone()
+    except sql3.IntegrityError:
+        print("Domanda, già presente nel database")
+        return False
+    else:
+        if not x:
+            return False
+        return True
+
 def popola_database(db, cursore, domanda, immagine, risposte, dict_pti, linkDom, linkDomRisp):
     """Popola il database"""
-    try:
-        cursore.execute('SELECT ID FROM Domande WHERE Domanda=?', (str(domanda),))
+    """try:
+        cursore.execute('SELECT ID FROM Domande WHERE Domanda=? or Immagine =?', (str(domanda), str(immagine)))
     except sql3.IntegrityError:
         print("Domanda, già presente nel database")
         return
-    else:
-        domanda = " ".join(domanda.split("\n"))
-        print("aggiungo domanda al database")
-        cursore.execute('INSERT INTO Domande(Domanda, Immagine) VALUES(?,?)',
-                        (str(domanda), str(immagine)))
-        db.commit()
+    else:"""
+    domanda = " ".join(domanda.split("\n"))
+    print("AGGIUNGIAMOLA!")
+    cursore.execute('INSERT INTO Domande(Domanda, Immagine) VALUES(?,?)',
+                    (str(domanda), str(immagine)))
+    db.commit()
 
     #cursore.execute('SELECT ID FROM Domande WHERE Domanda=?', (str(domanda),))
     cursore.execute('SELECT max(ID) FROM Domande')
@@ -307,8 +321,8 @@ def popola_database(db, cursore, domanda, immagine, risposte, dict_pti, linkDom,
                          int(dict_pti[risposte[i]]['_d_R_']) + int(dict_pti[risposte[i]]['_dr_R_'])))
         db.commit()
 
-        cursore.execute('SELECT ID FROM Risposte WHERE Risposta=?', (str(risposta),))
-        id_risp = cursore.fetchone()[0]
+        #cursore.execute('SELECT ID FROM Risposte WHERE Risposta=?', (str(risposta),))
+        id_risp = cursore.lastrowid
 
         cursore.execute('INSERT INTO RispDom(IDRisp, IDDom) VALUES(?,?)',
                         (id_risp, id_domanda))
@@ -330,6 +344,67 @@ def lavora_database():
         #db.execute("UPDATE Domande SET Domanda = ? WHERE ID = ?", (d,n))
         print(d[0])
 
+def get_keyword_database():
+    # Creo una nuova tabella nel db per le parole chiave, se c'è l'aggiorno semplicemente
+    # Ogni domanda presente nel database viene analizzata
+    # Elimino le parole inutili
+    # Seleziono le parole in maiuscolo o tra virgolette (keyword vere e proprie)
+    # Salvo tutte le altre (sostantivi)
+    db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
+    # Connettiamo il database e verifichiamo che ci siano le tabelle
+    db = sql3.connect(db_file)
+    domande = db.execute("SELECT Domanda FROM Domande")
+    print(inutili)
+    with open(os.path.join(PATH_DOM_RSP, 'keywords.csv'), 'w', newline='') as log:
+        for domanda in domande:
+            print(domanda)
+            d = domanda[0].replace('\'', ' ')
+            print(d)
+            d = d.split()
+            print(d)
+
+            virgolettato = False
+            parole = []
+            for parola in d:
+
+                if '"' in parola and virgolettato:
+                    # riconosce il termine del virgolettato"
+                    p += ' ' + parola
+                    virgolettato = False
+                    parole.append(p)
+                    continue
+
+                elif '"' in parola and not virgolettato:
+                    # riconosce "l'inizio
+                    if parola[-1] == '"' or parola[-2] == '"':
+                        # riconosce quando virgoletti una singola "parola"
+                        parole.append(parola)
+                        continue
+                    virgolettato = True
+                    p = parola
+                    continue
+
+                elif '"' not in parola and virgolettato:
+                    # riconosce le parole nel mezzo della virgolettata
+                    p += ' ' + parola
+                    continue
+
+                if parola.lower() not in inutili:
+                    parole.append(parola)
+            try:
+                scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                scrivente.writerow([domanda])
+                p = ' '.join(parole)
+                print(p)
+                scrivente.writerow([p])
+                scrivente.writerow()
+            except:
+                print('Errore')
+
+            #parole = [parola for parola in d if parola.lower() not in inutili]
+
+
+
 def istogramma_database():
     db_file = os.path.join(SCREEN_DIR, 'archivio_domande.db')
     # Connettiamo il database e verifichiamo che ci siano le tabelle
@@ -343,9 +418,9 @@ def istogramma_database():
             hist[d] = hist.get(d, 0) + 1
     return hist
 
-def processa_istogramma_database():
+def processa_istogramma_database(nome='istogramma_domande.csv'):
     h = istogramma_database()
-    with open(os.path.join(PATH_DOM_RSP, 'istogramma_domande.csv'), 'w', newline='') as log:
+    with open(os.path.join(PATH_DOM_RSP, nome), 'w', newline='') as log:
         for k, v in h.items():
             try:
                 scrivente = csv.writer(log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -414,15 +489,26 @@ def problemi_database_sposta_immagini():
         db.commit()
 
 def main_database():
-    immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_BLUE, '*'), recursive=True) + glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
+    #sorted(glob.glob('*.png'), key=os.path.getmtime)
+    immagini_da_studiare = sorted(glob.glob(os.path.join(PATH_DOM_BLUE, '*'), recursive=True), key=os.path.getmtime, reverse=True) + sorted(glob.glob(
+        os.path.join(PATH_DOM_RSP, '*'), recursive=True), key=os.path.getmtime, reverse=True)
+    #immagini_da_studiare = glob.glob(os.path.join(PATH_DOM_BLUE, '*'), recursive=True) + glob.glob(os.path.join(PATH_DOM_RSP, '*'), recursive=True)
     db = ottieni_database()
     cursore = db.cursor()
+
     for n, immagine in enumerate(immagini_da_studiare):
+        print(immagine)
+        tempo_attesa = 3
+        # Controllo se l'immagine è già presente nel database, in quel caso vado oltre.
 
         try:
             el = Elaboratore(immagine)
             el.salva_i_pezzi()
             id = Identificatore(el.pezzi)
+            if is_doppione(db, cursore, immagine, id.domanda):
+                print("Doppione")
+                tempo_attesa = 0
+                continue
             id.prepara_url_da_ricercare(id.domanda, id.risposte)
             pp = Punteggiatore([id.domanda_url, id.risp_url], id.risposte, id.domanda)
 
@@ -441,15 +527,16 @@ def main_database():
             print(e)
             continue
         finally:
-            time.sleep(4)
+            time.sleep(tempo_attesa)
 
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
     #diario_csv()
+    get_keyword_database()
     #main_database()
     #lavora_database()
     #processa_istogramma_database()
-    problemi_database_sposta_immagini()
+    #problemi_database_sposta_immagini()
     #nltk_prova()
     #scrape()
     #trova_risposta('https://www.google.com/search?q=trama+del+film+rocknrolla&oq=trama+del+film+rocknrolla',
