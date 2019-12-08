@@ -532,8 +532,8 @@ def main_database():
 if __name__ == '__main__':
     #aggancia_dom_e_risp()
     #diario_csv()
-    get_keyword_database()
-    #main_database()
+    #get_keyword_database()
+    main_database()
     #lavora_database()
     #processa_istogramma_database()
     #problemi_database_sposta_immagini()

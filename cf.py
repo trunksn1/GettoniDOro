@@ -14,13 +14,16 @@ USER_AGENT = {
 }
 
 regex_patt_compilato = re.compile(r'''
-(?P<traquesti>(?:[Qq]ual.?)?(?:\D*?quest.))|                        # Cerca "Quale Tra questi"
-\b(?P<corse>Moto\s?[GPgp]+?|Formula\s(?:1|uno|Uno)|Gran\sPremio)\b| # cerca riferimenti alle gare di corsa
-(?P<bandiera>\bbandier.\b)|                                         # cerca bandiere
-(?P<prima>\bprim.|pi[uù] recente\b)|                                # Cerca riferimenti temporali
-(?P<keyw1>\b[A-Z][a-z]+\b)|                                         # Cerca parole inizianti con la maiuscola
-\"(?P<keyw2>.+?)\"                                                  # cerca frasi tra "virgolette"
-''', re.VERBOSE)
+
+    (?P<traquesti>(?:[Qq]ual.?|[Ch]i)?(?:\D*?\bquest.\b|\D*?\bloro\b))|         # Cerca "Quale tra questi|Chi tra loro"
+    \b(?P<corse>Moto\s?[GPgp]+?|Formula\s(?:1|uno|Uno)|Gran\sPremio)\b| # cerca riferimenti alle gare di corsa
+    (?P<bandiera>\bbandier.\b)|                                         # cerca bandiere
+    (?P<serietv>(?:\D*?stagioni)?\b[Ss]erie\s?[Tt].*?\b(?:\D*?stagioni)?)|                                # cerca il numero di stagioni di serie TV
+    (?P<prima>\bprim.|pi[uù] recente\b)|                                # Cerca riferimenti temporali
+    (?P<keyw1>\b[A-Z][a-z]+\b)|                                         # Cerca parole inizianti con la maiuscola
+    \"(?P<keyw2>.+?)\"|                                                 # cerca frasi tra "virgolette"
+    (?P<keyw3>\w+)                                                      # restanti parole
+    ''', re.VERBOSE)
 
 
 # Moltiplicatore per Resize dell'immagine
