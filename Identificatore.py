@@ -160,7 +160,7 @@ class Identificatore():
         Output: Risposta potata di eventuali parole inutili all'inizio (come articoli o preposizioni)
         """
         r = risp.replace('\'', ' ').split()
-        if r[0].lower() in inutili:
+        if (r[0].lower() in inutili):# or len(r[0]) == 1:
             r.pop(0)
             s = " ".join(r)
             return s
@@ -217,7 +217,7 @@ class Identificatore():
         diz = {"traquesti": [], "corse": [], "bandiera": [], "serietv": [], "prima": [], "keyw1": [], "keyw2": [], "keyw3": []}
 
         _ = { diz[k].append(v)  for m in regex_patt_compilato.finditer(d) for k, v in m.groupdict().items() if v }
-        print(diz)
+        #print(diz)
         # flag che deve indirizzare il modo in cui fare la ricerca su google
         flag_ricerca = ""   #classico, comparativo (cerca dom e risposta), specifico (query creata ad arte)
         query = ''
@@ -232,7 +232,9 @@ class Identificatore():
         else:
             self.keywords = self.elimina_parole_inutili(diz['keyw3'])
 
-
+        """
+        Da implemetare uno alla volta
+        
         if diz["corse"]:
             #TODO
             pass
@@ -240,7 +242,7 @@ class Identificatore():
             keywords = diz['corse'] + diz['keyw1'] + diz['keyw2']
             query = ' '.join(keywords)
             print(query)
-            input('STOP')
+            #input('STOP')
         elif diz["serietv"]:
             # TODO
             pass
@@ -253,12 +255,14 @@ class Identificatore():
                 keywords = diz['keyw1'] + diz['keyw2']
                 query = ' '.join(keywords)
                 print(query)
-            input('STOP')
+            #input('STOP')
         elif diz["bandiera"]:
             pass
         #elif diz["prima"]:
         #    pass
-        elif diz["traquesti"]:
+        """
+
+        if diz["traquesti"]:
             flag_query = 'traquesti'
 
             stringa_pulita = self.domanda.replace(diz["traquesti"][0], '')

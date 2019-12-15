@@ -7,7 +7,7 @@ RELABOR_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'rielabo
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'templates')
 CSS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static', 'main.css')
 
-
+#Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36
 
 USER_AGENT = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36'

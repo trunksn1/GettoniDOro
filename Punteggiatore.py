@@ -82,6 +82,94 @@ class Punteggiatore():
         #print(self.dizionario_di_risposte_e_key_punteggi)
 
 
+    def download_all(self):
+        """Funzione Asincrona, contemporaneamente viene lanciata la funzione download_site_preserva_html,
+        Input
+         sites: lista con due url, uno per la sola domanda, uno per domanda e risposta
+        grazie a executor.map, la funzione viene lanciata contemporaneamente 2 volte avendo come argomento un elemento
+        dalla lista sites alla volta,
+        Output = [[risultati sola domanda][risultati domanda con rispose]]
+         lista contenente due liste, in una avremo i risultati dati da google cercando la sola domanda
+         e nell'altra invece i risultati di domanda e risposte.
+         Inoltre, i risultati sono ordinati in modo che trovi prima quelli in cui è stata trovata una delle 3 risposte
+         e poi quelli senza riscontri.
+        La funzione asincrona combina le liste restituite singolarmente dalla funzione download_site_preserva_html
+        in una lista contenente due liste
+        """
+        # Preso da un articolo su RealPython che parlava di Concurrency/multiprocessing
+
+        if len(self.lista_url) == 2:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                # otterrai una lista contenente due liste:
+                # nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
+                self.risultati_soup_google = list(executor.map(self.download_site_preserva_html, self.lista_url, timeout=3000))
+                #print(self.risultati_soup_google)
+        else:
+        #elif len(self.lista_url) == 3:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                # otterrai una lista contenente due liste:
+                # nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
+                self.risultati_soup_google = list(executor.map(self.download_3sites, self.lista_risposte, timeout=3000))
+                #print(self.risultati_soup_google)
+
+        #print(self.dizionario_di_risposte_e_key_punteggi)
+
+    def download_sites(self, url_o_risposta):
+        session = requests.Session()
+        risultato = []
+        lista_classi = ['Z0LcW', 'e24Kjd', 'i4J0ge']
+
+        """['i4J0ge', 'SPZz6b', 'DESCRIZIONE_DA_INSERIRE'],
+            ['i8Z77e', 'Estratti di liste'],
+            ['desktop-title-content', 'desktop-title-subcontent', 'mappa']"""
+
+        if url_o_risposta in self.lista_risposte:
+            risposta = url_o_risposta
+            url = self.dizionario_di_risposte_e_key_punteggi[risposta]['url']
+        else:
+            url = url_o_risposta
+            
+        with session.get(url, headers=USER_AGENT) as r:
+            r.raise_for_status()
+            html_doc = r.text
+            strainer = SoupStrainer('div', attrs={'id': 'search'})
+            soup = BeautifulSoup(html_doc, 'lxml', parse_only=strainer)
+            lista_riscontri = []
+            lista_non_riscontri = []
+
+            stringa = ''
+            stringhe = []
+
+            for classe in lista_classi:
+                #print(risposta, classe)
+                #stringhe.append(self.get_risultato_from_soup(classe))
+                stringa = self.get_risultato_from_soup(classe, soup)
+                if stringa:
+                    #print('Trovato un risultato:\n {}'.format(stringa))
+                    esito, risultato = self.punti_dal_risultato(stringa, url, 2)
+                    if esito:
+                        lista_riscontri.append(risultato)
+                    else:
+                        lista_non_riscontri.append(risultato)
+
+            for g in soup.find_all(class_='g'):
+                # Adesso cerco diverse cose:
+                #print('Cerco: {}'.format(risposta))
+                stringa = self.get_risultato_from_soup('st', g)
+                if not stringa:
+                    continue
+                else:
+                    #print('Trovato un risultato per {}:\n {}'.format(risposta, stringa))
+                    pass
+                # Introdotto il 14/09 per velocizzare
+                esito, risultato = self.punti_dal_risultato(stringa, risposta)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+
+            return lista_riscontri + lista_non_riscontri
+
     def download_site_preserva_html(self, url):
         # Tenta di guardare anche nei box di google
         session = requests.Session()
@@ -275,13 +363,7 @@ class Punteggiatore():
             return lista_riscontri + self.lista_riscontri + lista_non_riscontri + self.lista_non_riscontri
         """
 
-    def produci_stringa_risultato (self, soup, css_class_testo, titolo='', testo=''):
-        if not testo:
-            testo = soup.find(class_=css_class_testo)
-        else:
-            titolo = soup.find(class_=css_class_testo)
-        stringa = str(titolo) + '<br>' + str(testo)
-        return stringa
+
 
 
     def get_keyword_domanda(self, pattern, domanda):
@@ -343,26 +425,25 @@ class Punteggiatore():
                 # otterrai una lista contenente due liste:
                 # nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
                 self.risultati_soup_google = list(executor.map(self.download_site_preserva_html, sites, timeout=3000))
-                print(self.risultati_soup_google)
+                #print(self.risultati_soup_google)
         elif len(self.lista_url) == 3:
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 # otterrai una lista contenente due liste:
                 # nella prima ci sono i risultati dell'url della domanda, nell'altro quello di domanda e risposte
                 self.risultati_soup_google = list(executor.map(self.download_3sites, self.lista_risposte, timeout=3000))
-                print(self.risultati_soup_google)
+                #print(self.risultati_soup_google)
 
         #print(self.dizionario_di_risposte_e_key_punteggi)
 
     def download_3sites(self, risposta):
         session = requests.Session()
         risultato = []
-        elementi_speciali = [
-            ['Z0LcW', 'e24Kjd', 'DESCRIZIONE_DA_INSERIRE'],
-            ['i4J0ge', 'SPZz6b', 'DESCRIZIONE_DA_INSERIRE'],
+        lista_classi = ['Z0LcW', 'e24Kjd', 'i4J0ge']
+
+        """['i4J0ge', 'SPZz6b', 'DESCRIZIONE_DA_INSERIRE'],
             ['i8Z77e', 'Estratti di liste'],
-            ['desktop-title-content', 'desktop-title-subcontent', 'mappa'],
-            [],
-        ]
+            ['desktop-title-content', 'desktop-title-subcontent', 'mappa']"""
+
         url = self.dizionario_di_risposte_e_key_punteggi[risposta]['url']
         with session.get(url, headers=USER_AGENT) as r:
             r.raise_for_status()
@@ -375,6 +456,37 @@ class Punteggiatore():
             stringa = ''
             stringhe = []
 
+            for classe in lista_classi:
+                #print(risposta, classe)
+                #stringhe.append(self.get_risultato_from_soup(classe))
+                stringa = self.get_risultato_from_soup(classe, soup)
+                if stringa:
+                    #print('Trovato un risultato:\n {}'.format(stringa))
+                    esito, risultato = self.punti_dal_risultato(stringa, url, 2)
+                    if esito:
+                        lista_riscontri.append(risultato)
+                    else:
+                        lista_non_riscontri.append(risultato)
+
+            for g in soup.find_all(class_='g'):
+                # Adesso cerco diverse cose:
+                #print('Cerco: {}'.format(risposta))
+                stringa = self.get_risultato_from_soup('st', g)
+                if not stringa:
+                    continue
+                else:
+                    #print('Trovato un risultato per {}:\n {}'.format(risposta, stringa))
+                    pass
+                # Introdotto il 14/09 per velocizzare
+                esito, risultato = self.punti_dal_risultato(stringa, risposta)
+                if esito:
+                    lista_riscontri.append(risultato)
+                else:
+                    lista_non_riscontri.append(risultato)
+
+            return lista_riscontri + lista_non_riscontri
+
+            """
             # Questo è per trovare le risposte secche, es: "Dove gioca ribery?", Non ha un titolo ad oggi 08/12/2019
             resp = soup.find(class_='Z0LcW')
             # Questo è lo snippet generato da google che contiene una descrizione ed alcune informazioni in tabella
@@ -402,6 +514,7 @@ class Punteggiatore():
                         titolo = soup.find(class_='LC20lb')
                         stringa += str(titolo) + '<br>' + str(text)
 
+                    #Per non perderci troppo tempo escluderei questi ultimi risultati
                     else:  # Quando escono estratti di liste
                     # https://www.google.com/search?q=Qual+%C3%A8+l%27isola+pi%C3%B9+grande+d%27Italia?
                         geo = soup.find(class_='i8Z77e')
@@ -412,6 +525,7 @@ class Punteggiatore():
                             if mappa:
                                 res = soup.find(class_="desktop-title-subcontent")
                                 stringa += str(mappa) + '<br>' + str(res)
+
 
             if stringa:
                 esito, risultato = self.punti_dal_risultato(stringa, url, 2)
@@ -441,10 +555,7 @@ class Punteggiatore():
                     lista_non_riscontri.append(risultato)
 
             return lista_riscontri + lista_non_riscontri
-
-
-    def get_risultato_from_soup(self,):
-        pass
+            """
 
 
     def chiama_ottieni_punti(self):
@@ -557,7 +668,53 @@ class Punteggiatore():
                 trovato = True
             return trovato, risultato
 
+    def get_risultato_from_soup(self, sunto_css_class, soup):
+        sunto_titolo = {'i4J0ge': 'SPZz6b',
+                        'e24Kjd': 'LC20lb',
+                        'st': 'LC20lb',
+                        'Z0LcW': 'e24Kjd'}
+        sunto = soup.find(class_=sunto_css_class)
+        """
+        try:
+            print('Sunto trovato:\n {}'.format(sunto.text))
+        except:
+            return
+        """
+        stringa = ''
+        if not sunto:
+            return
+        else:
+            try:
+                titolo = soup.find(class_=sunto_titolo[sunto_css_class])
+            except:
+                titolo = ''
+            finally:
+                stringa = str(titolo) + '<br>' + str(sunto)
+        return stringa
+        """
+        try:
+            if not sunto.text:
+                return
+            else:
+                try:
+                    titolo = soup.find(class_=sunto_titolo[sunto_css_class])
+                except:
+                    titolo = ''
+                finally:
+                    stringa = str(titolo) + '<br>' + str(sunto)
+            return stringa
+        except Exception as e:
+            print(e)
+            return
+        """
 
+    def produci_stringa_risultato(self, soup, css_class_testo, titolo='', testo=''):
+        if not testo:
+            testo = soup.find(class_=css_class_testo)
+        else:
+            titolo = soup.find(class_=css_class_testo)
+        stringa = str(titolo) + '<br>' + str(testo)
+        return stringa
 
     def controlla_dizionario(self, key, risposta):
         if risposta not in self.dizionario_di_risposte_e_key_punteggi:

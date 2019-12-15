@@ -37,10 +37,11 @@ while True:
     """Esperimento per KEYWORDS"""
     # TODO quando avrò implementato la funzione Identificatore.trova_keyword()
     flag_query = id.trova_keyword(regex_patt_compilato, id.domanda)
-    print(flag_query)
+    #print(flag_query)
     id.prepara_url_da_ricercare(id.domanda, id.risposte, flag_query)
+    print('Tempo identificatore: {}'.format(time.time() - start))
     pp = Punteggiatore(id.query_urls, id.risposte, id.domanda, keywords=id.keywords)
-    print(pp.dizionario_di_risposte_e_key_punteggi)
+    #print(pp.dizionario_di_risposte_e_key_punteggi)
     pp.rendo_template_html()
     print('Tempo punteggiatore: {}'.format(time.time() - start))
     print(time.time()-start)
