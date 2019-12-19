@@ -7,12 +7,16 @@ from Sarto import Sarto
 #from Guiatore import Guiatore
 from cf import regex_patt_compilato
 import time
+from datetime import date
+from helpers import logging
 import multiprocessing as mp
 
 
 #TODO: controllare se nel file install_settings c'è il percorso di PyTesseract, se non c'è ottienilo (via GUI)
 screen_grabber = ScreenGrab()
 cords = ()
+counter = 0
+modo = 'w'
 
 while True:
 
@@ -40,11 +44,21 @@ while True:
     #print(flag_query)
     id.prepara_url_da_ricercare(id.domanda, id.risposte, flag_query)
     print('Tempo identificatore: {}'.format(time.time() - start))
-    pp = Punteggiatore(id.query_urls, id.risposte, id.domanda, keywords=id.keywords)
-    #print(pp.dizionario_di_risposte_e_key_punteggi)
-    pp.rendo_template_html()
-    print('Tempo punteggiatore: {}'.format(time.time() - start))
-    print(time.time()-start)
+    try:
+        pp = Punteggiatore(id.query_urls, id.risposte, id.domanda, keywords=id.keywords)
+        #print(pp.dizionario_di_risposte_e_key_punteggi)
+        pp.rendo_template_html()
+        print('Tempo punteggiatore: {}'.format(time.time() - start))
+        print(time.time()-start)
+        if counter != 0:
+            modo = 'a'
+        logging(modo, id.domanda, id.risposte, id.query_urls, pp.dizionario_di_risposte_e_key_punteggi, date.today())
+    except Exception as e:
+        print('********ERRORE*********')
+        print(e)
+        continue
+    counter += 1
+
     #input('STOP')
     """FINE ESPERIMENTO"""
 

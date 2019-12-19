@@ -5,6 +5,7 @@ import re
 from collections import ChainMap
 import timeit
 import multiprocessing as mp
+import json
 
 def set_driver_new(coordinate_browser, queue):
     driver = webdriver.Chrome(WEBDRIVER_PATH)
@@ -129,6 +130,46 @@ def copia():
         print(l_info)
         keywords = ''   #tutti i sostantivi trovati nei risultati di google. Usa la libreria NLTK, ma in italiano?
         pacchetto = ans['answer'], keywords, l_info
+
+def logging(modo, domanda, risposte, link, dizionario, data, errore=''):
+    with open("log.txt", modo) as file:
+        if errore:
+            file.write('°***°***°***°***°\n')
+            file.write('ERRORE-ERRORE\n')
+            file.write(str(errore))
+            file.write('°***°***°***°***°\n')
+            file.write('\n')
+            try:
+                if modo == 'w':
+                    file.write('+------------+\n')
+                    file.write('| ' + str(data) + ' |\n')
+                    file.write('+------------+\n')
+                file.write('\n')
+                file.write('°---°---°---°---°\n')
+                file.write(str(domanda))
+                file.write('°---°---°---°---°\n')
+                file.write('\n')
+                file.write('\n'.join(risposte))
+                file.write('\n')
+            except:
+                pass
+            finally:
+                return
+        if modo == 'w':
+            file.write('+------------+\n')
+            file.write('| ' + str(data) + ' |\n')
+            file.write('+------------+\n')
+        file.write('\n')
+        file.write('°---°---°---°---°\n')
+        file.write(str(domanda))
+        file.write('°---°---°---°---°\n')
+        file.write('\n')
+        file.write('\n'.join(risposte))
+        file.write('\n')
+        file.write('\n'.join(link))
+        file.write('\n')
+        file.write(json.dumps(dizionario))
+        file.write('\n')
 
 
 if __name__ == '__main__':
