@@ -27,6 +27,22 @@ while True:
         start = time.time()
         cords = screen_grabber.calcolo_spazi_domande_e_risposte()
     # Se riutilizzo le vecchie coordinate non ho bisogno di ricalcolare nulla
+    elif screen_grabber.key_pressed == 'F7':
+        start = time.time()
+        print('NUOVA F7')
+        sarto = Sarto()
+        if sarto.inizializzato:
+            sarto.get_program_cords('BlueStacks')
+            cords = sarto.get_cords_domande_e_risposte()
+            # Se Bluestacks non viene trovato, ricercarlo tra 60 secondi
+            if not cords:
+                print('Bluestacks non trovato! vai di F6')
+                sarto.inizializzato = False
+                cords = screen_grabber.calcolo_spazi_domande_e_risposte()
+            else:
+                print('Solitario funziona!\n {}'.format(cords))
+                screen_grabber.cords = sarto.get_cords_domande_e_risposte()
+
     elif screen_grabber.key_pressed == 'F9':
         start = time.time()
         pass

@@ -3,6 +3,7 @@ try:
     from PIL import ImageGrab, Image
 except ImportError:
     import Image
+from Sarto import Sarto
 import os, time
 from pynput import mouse
 from pynput.keyboard import Key, Listener
@@ -23,6 +24,7 @@ class ScreenGrab():
 
     def start_screen_grab(self):
         print('Premi F6 per indicare dove inizia la schermata da catturare\n'
+              'Premi F7 per catturare automaticamente la finestra del quiz\n'
               'Premi F9 per riutilizzare le coordinate precedenti')
         with Listener(on_press=self.on_press) as listener:
             listener.join()
@@ -42,6 +44,15 @@ class ScreenGrab():
                 return False
             else:
                 raise Exception('le coordinate sono vuote!')
+        if key == Key.f7:
+            if self.cords:
+                self.key_pressed = 'F9' #se premi per sbaglio di nuovo F7 ma hai già delle coordinate catturate, riussale
+                print('RICICLO COORDINATE')
+                return False
+            else:
+                self.key_pressed = 'F7'
+                return False
+
 
     def get_cords_new(self):
         """Si attiva dopo aver premuto F6"""

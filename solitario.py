@@ -189,7 +189,7 @@ if __name__ == '__main__':
         # Domanda con risposte, schermata di errore per continuare
         #screen_grabber.calcolo_spazi_domande_e_risposte(is_solitario=True)
         # Viene salvato lo screenshot della schermata ristretta
-        screen_grabber.screen_grab('prova')
+        screen_grabber.screen_grab('solitario')
         # 3 Andiamo a vedere se c'è la schermata  di errore
         if screen_grabber.is_messaggio_errore(punto_errore):
             #punto_corretto = correggi_punto(cord_domanda, punto_errore)
