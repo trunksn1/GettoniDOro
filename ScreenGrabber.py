@@ -70,13 +70,13 @@ class ScreenGrab():
         if is_solitario:
             largh = self.cords[2] - self.cords[0]
             altezz = self.cords[3] - self.cords[1]
-            print('SOLISSIMO')
-            print(self.cords)
+            #print('SOLISSIMO')
+            #print(self.cords)
             y_in = self.cords[1] + int(altezz * 0.265)
             y_fin = self.cords[1] + int(altezz * 0.914)
             self.cords = self.cords[0], y_in, self.cords[2], y_fin
             self.dimensioni_originali = largh, altezz
-            print(self.cords)
+            #print(self.cords)
         if len(self.cords) < 4:
             inizio_domande = self.cords
             fine_risposte = [self.cords[0] + x, self.cords[1] + y]
@@ -86,10 +86,10 @@ class ScreenGrab():
     def is_messaggio_errore(self, punto):
         """Questa funzione utilizza un'immagine non tagliata del programma bluestacks"""
         #self.get_punto_msg_errore()
-        print('QUANTO COLORI?')
-        print(punto)
+        #print('QUANTO COLORI?')
+        #print(punto)
         colore_centro_risp_errata = self.im.getpixel(punto)
-        print(colore_centro_risp_errata)
+        #print(colore_centro_risp_errata)
         if colore_centro_risp_errata == (53, 204, 252):
             print('RISPOSTA SBAGLIATA')
             #self.punto_corretto = self.punto[0], self.punto[1] + self.cords[1]
@@ -107,7 +107,7 @@ class ScreenGrab():
         x_sin = (0.139 * larghezza) #+ self.cords[0]
         x_des = (0.86 * larghezza) #+ self.cords[0]
         self.punto = int(((x_sin + x_des) / 2)), int(((y_in + y_fin) / 2))
-        print("punto", self.punto)
+        #print("punto", self.punto)
         return self.punto
 
 
